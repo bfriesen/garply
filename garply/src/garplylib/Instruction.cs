@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Text;
 using System.Threading;
 
 namespace garply
@@ -19,6 +20,9 @@ namespace garply
             switch (opcode)
             {
                 case Opcode.Nop:
+                case Opcode.LoadBoolean:
+                case Opcode.LoadInteger:
+                case Opcode.LoadFloat:
                     break;
                 case Opcode.Reserved1:
                 case Opcode.Reserved2:
@@ -72,6 +76,15 @@ namespace garply
                 case Opcode.Nop:
                     operand = default(EmptyOperand);
                     break;
+                case Opcode.LoadBoolean:
+                    operand = new Boolean(BitConverter.ToBoolean(operandData, 0));
+                    break;
+                case Opcode.LoadInteger:
+                    operand = new Integer(BitConverter.ToInt64(operandData, 0));
+                    break;
+                case Opcode.LoadFloat:
+                    operand = new Float(BitConverter.ToDouble(operandData, 0));
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException("opcode");
             }
@@ -79,21 +92,21 @@ namespace garply
             return new Instruction(opcode, operand);
         }
 
-        public void Write(Stream stream)
+        public void Write(BinaryWriter writer)
         {
             if ((ushort)Opcode < 256)
             {
-                stream.WriteByte((byte)Opcode);
+                writer.Write((byte)Opcode);
             }
             else
             {
-                stream.WriteByte((byte)(((ushort)Opcode & 0xFF00) >> 8));
-                stream.WriteByte((byte)((ushort)Opcode & 0xFF));
+                writer.Write((byte)(((ushort)Opcode & 0xFF00) >> 8));
+                writer.Write((byte)((ushort)Opcode & 0xFF));
             }
 
             if (_operand != null)
             {
-                _operand.Write(stream);
+                _operand.Write(writer);
             }
         }
 

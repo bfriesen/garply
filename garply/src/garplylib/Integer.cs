@@ -1,6 +1,4 @@
-﻿using System;
-using System.IO;
-using System.Text;
+﻿using System.IO;
 
 namespace garply
 {
@@ -15,12 +13,9 @@ namespace garply
 
         public long Value { get; }
 
-        public void Write(Stream stream)
+        public void Write(BinaryWriter writer)
         {
-            using (var writer = new BinaryWriter(stream, Encoding.UTF8, true))
-            {
-                writer.Write(Value);
-            }
+            writer.Write(Value);
         }
     }
 }

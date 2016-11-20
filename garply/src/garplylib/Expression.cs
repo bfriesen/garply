@@ -37,16 +37,13 @@ namespace garply
             }
         }
 
-        public void Write(Stream stream)
+        public void Write(BinaryWriter writer)
         {
-            using (var writer = new BinaryWriter(stream, Encoding.UTF8, true))
-            {
-                writer.Write(_instructions.Length);
-            }
+            writer.Write(_instructions.Length);
 
             foreach (var instruction in _instructions)
             {
-                instruction.Write(stream);
+                instruction.Write(writer);
             }
         }
     }
