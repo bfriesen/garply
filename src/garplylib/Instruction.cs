@@ -21,6 +21,7 @@ namespace garply
             {
                 case Opcode.Nop:
                 case Opcode.LoadBoolean:
+                case Opcode.LoadString:
                 case Opcode.LoadInteger:
                 case Opcode.LoadFloat:
                 case Opcode.Return:
@@ -42,7 +43,7 @@ namespace garply
         public Opcode Opcode { get; }
         public IOperand Operand { get { return _operand ?? (_operand = default(EmptyOperand)); } }
 
-        public static Instruction Read(Stream stream)
+        public static Instruction Read(Stream stream, IMetadataDatabase metadataDatabase)
         {
             Opcode opcode;
             var b = stream.ReadByte();
@@ -81,6 +82,9 @@ namespace garply
                 case Opcode.LoadBoolean:
                     operand = new Boolean(BitConverter.ToBoolean(operandData, 0));
                     break;
+                case Opcode.LoadString:
+                    operand = metadataDatabase.LoadString(new Integer(BitConverter.ToInt64(operandData, 0)));
+                    break;
                 case Opcode.LoadInteger:
                     operand = new Integer(BitConverter.ToInt64(operandData, 0));
                     break;
@@ -94,7 +98,7 @@ namespace garply
             return new Instruction(opcode, operand);
         }
 
-        public void Write(BinaryWriter writer)
+        public void Write(BinaryWriter writer, IMetadataDatabase metadataDatabase)
         {
             if ((ushort)Opcode < 256)
             {
@@ -108,7 +112,7 @@ namespace garply
 
             if (_operand != null)
             {
-                _operand.Write(writer);
+                _operand.Write(writer, metadataDatabase);
             }
         }
 

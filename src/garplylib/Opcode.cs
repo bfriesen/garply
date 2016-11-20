@@ -4,6 +4,7 @@
     {
         Nop,
         LoadBoolean,
+        LoadString,
         LoadInteger,
         LoadFloat,
         Return,

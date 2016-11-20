@@ -20,7 +20,7 @@ namespace garply
             get { return _instructions ?? (_instructions = _emptyInstructions); }
         }
 
-        public static Expression Read(Stream stream)
+        public static Expression Read(Stream stream, IMetadataDatabase metadataDatabase)
         {
             using (var reader = new BinaryReader(stream, Encoding.UTF8, true))
             {
@@ -30,20 +30,20 @@ namespace garply
 
                 for (int i = 0; i < instructionCount; i++)
                 {
-                    expression.Add(Instruction.Read(stream));
+                    expression.Add(Instruction.Read(stream, metadataDatabase));
                 }
 
                 return expression.Build();
             }
         }
 
-        public void Write(BinaryWriter writer)
+        public void Write(BinaryWriter writer, IMetadataDatabase metadataDatabase)
         {
             writer.Write(_instructions.Length);
 
             foreach (var instruction in _instructions)
             {
-                instruction.Write(writer);
+                instruction.Write(writer, metadataDatabase);
             }
         }
     }

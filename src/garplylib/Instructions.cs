@@ -11,19 +11,25 @@ namespace garply
             return new Instruction(Opcode.Nop, default(EmptyOperand));
         }
 
-        public static Instruction Load(Integer value)
+        public static Instruction LoadInteger(Integer value)
         {
             return new Instruction(Opcode.LoadInteger, value);
         }
 
-        public static Instruction Load(Float value)
+        public static Instruction LoadFloat(Float value)
         {
             return new Instruction(Opcode.LoadFloat, value);
         }
 
-        public static Instruction Load(Boolean value)
+        public static Instruction LoadBoolean(Boolean value)
         {
             return new Instruction(Opcode.LoadBoolean, value);
+        }
+
+        public static Instruction LoadString(Integer id, IMetadataDatabase metadataDatabase)
+        {
+            var value = metadataDatabase.LoadString(id);
+            return new Instruction(Opcode.LoadString, value);
         }
 
         public static Instruction Return()
