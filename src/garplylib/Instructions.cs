@@ -25,5 +25,10 @@ namespace garply
         {
             return new Instruction(Opcode.LoadBoolean, value);
         }
+
+        public static Instruction Return()
+        {
+            return new Instruction(Opcode.Return);
+        }
     }
 }

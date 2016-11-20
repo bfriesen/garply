@@ -9,6 +9,7 @@ namespace garply
             switch (opcode)
             {
                 case Opcode.Nop:
+                case Opcode.Return:
                     return 0;
                 case Opcode.LoadBoolean:
                     return 1;
