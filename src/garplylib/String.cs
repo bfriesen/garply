@@ -3,7 +3,7 @@ using System.IO;
 
 namespace garply
 {
-    public class String : ITyped, IOperand
+    public class String : IFirstClassType, IOperand
     {
         public String(string value)
         {

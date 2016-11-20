@@ -1,12 +1,12 @@
 ﻿namespace garply
 {
-    public class List : ITyped
+    public class List : IFirstClassType
     {
         private List()
         {
         }
 
-        private List(ITyped head, List tail)
+        private List(IFirstClassType head, List tail)
         {
             Head = head;
             Tail = tail;
@@ -14,14 +14,14 @@
 
         public static List Empty { get; } = new List();
 
-        public List Add(ITyped item)
+        public List Add(IFirstClassType item)
         {
             return new List(item, this);
         }
 
         public Type Type => Type.ListType;
 
-        public ITyped Head { get; }
+        public IFirstClassType Head { get; }
 
         public List Tail { get; }
 

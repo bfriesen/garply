@@ -1,6 +1,6 @@
 ﻿namespace garply
 {
-    public interface ITyped
+    public interface IFirstClassType
     {
         Type Type { get; }
     }

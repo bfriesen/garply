@@ -2,7 +2,7 @@
 
 namespace garply
 {
-    public class Integer : ITyped, IOperand
+    public class Integer : IFirstClassType, IOperand
     {
         public Integer(long value)
         {

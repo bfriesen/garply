@@ -2,11 +2,11 @@
 
 namespace garply
 {
-    public class Tuple : ITyped
+    public class Tuple : IFirstClassType
     {
-        private readonly ITyped[] _items;
+        private readonly IFirstClassType[] _items;
 
-        public Tuple(params ITyped[] items)
+        public Tuple(params IFirstClassType[] items)
         {
 #if UNSTABLE
             if (items == null) throw new ArgumentNullException("items");
@@ -18,6 +18,6 @@ namespace garply
 
         public int Arity => _items.Length;
 
-        public ITyped this[int index] => _items[index];
+        public IFirstClassType this[int index] => _items[index];
     }
 }
