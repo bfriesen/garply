@@ -65,13 +65,18 @@ namespace garply
             var operandData = Buffer.Get(operandSize);
             if (stream.Read(operandData, 0, operandSize) != operandSize) throw new InvalidOperationException("End of stream");
 
+            IOperand operand;
+
             switch (opcode)
             {
                 case Opcode.Nop:
-                    return new Instruction(opcode, default(EmptyOperand));
+                    operand = default(EmptyOperand);
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException("opcode");
             }
+
+            return new Instruction(opcode, operand);
         }
 
         public void Write(Stream stream)
