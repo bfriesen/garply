@@ -2,7 +2,7 @@
 
 namespace garply
 {
-    public class Boolean : ITyped, IOperand
+    public class Boolean : IFirstClassType, IOperand
     {
         public Boolean(bool value)
         {

@@ -2,7 +2,7 @@
 
 namespace garply
 {
-    public class Float : ITyped, IOperand
+    public class Float : IFirstClassType, IOperand
     {
         public Float(double value)
         {

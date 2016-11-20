@@ -3,7 +3,7 @@ using System.IO;
 
 namespace garply
 {
-    public sealed class Type : ITyped, IOperand
+    public sealed class Type : IFirstClassType, IOperand
     {
         public static Type TypeType { get; } = new Type(Name.TypeName);
         public static Type TupleType { get; } = new Type(Name.TupleName);
@@ -26,8 +26,7 @@ namespace garply
 
         public Name Name { get; }
         public Type BaseType { get; }
-
-        Type ITyped.Type => TypeType;
+        Type IFirstClassType.Type => TypeType;
 
         public void Write(BinaryWriter writer, IMetadataDatabase metadataDatabase)
         {
