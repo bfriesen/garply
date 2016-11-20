@@ -4,6 +4,6 @@ namespace garply
 {
     public interface IOperand
     {
-        void Write(BinaryWriter writer);
+        void Write(BinaryWriter writer, IMetadataDatabase metadataDatabase);
     }
 }

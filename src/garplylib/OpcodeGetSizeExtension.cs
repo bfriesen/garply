@@ -13,6 +13,7 @@ namespace garply
                     return 0;
                 case Opcode.LoadBoolean:
                     return 1;
+                case Opcode.LoadString:
                 case Opcode.LoadInteger:
                 case Opcode.LoadFloat:
                     return 8;
