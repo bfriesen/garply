@@ -23,6 +23,7 @@ namespace garply
                 case Opcode.LoadBoolean:
                 case Opcode.LoadInteger:
                 case Opcode.LoadFloat:
+                case Opcode.Return:
                     break;
                 case Opcode.Reserved1:
                 case Opcode.Reserved2:
@@ -74,6 +75,7 @@ namespace garply
             switch (opcode)
             {
                 case Opcode.Nop:
+                case Opcode.Return:
                     operand = default(EmptyOperand);
                     break;
                 case Opcode.LoadBoolean:

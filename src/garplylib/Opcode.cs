@@ -6,6 +6,7 @@
         LoadBoolean,
         LoadInteger,
         LoadFloat,
+        Return,
         Reserved1 = Instruction.MarkerByte1,
         Reserved2 = Instruction.MarkerByte2,
         Reserved3 = Instruction.MarkerByte3,
