@@ -16,6 +16,7 @@ namespace garply
                 case Opcode.LoadString:
                 case Opcode.LoadInteger:
                 case Opcode.LoadFloat:
+                case Opcode.LoadType:
                     return 8;
                 case Opcode.Reserved1:
                 case Opcode.Reserved2:

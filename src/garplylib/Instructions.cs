@@ -32,6 +32,12 @@ namespace garply
             return new Instruction(Opcode.LoadString, value);
         }
 
+        public static Instruction LoadType(Integer id, IMetadataDatabase metadataDatabase)
+        {
+            var value = metadataDatabase.LoadType(id);
+            return new Instruction(Opcode.LoadType, value);
+        }
+
         public static Instruction Return()
         {
             return new Instruction(Opcode.Return);

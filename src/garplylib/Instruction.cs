@@ -24,6 +24,7 @@ namespace garply
                 case Opcode.LoadString:
                 case Opcode.LoadInteger:
                 case Opcode.LoadFloat:
+                case Opcode.LoadType:
                 case Opcode.Return:
                     break;
                 case Opcode.Reserved1:
@@ -90,6 +91,9 @@ namespace garply
                     break;
                 case Opcode.LoadFloat:
                     operand = new Float(BitConverter.ToDouble(operandData, 0));
+                    break;
+                case Opcode.LoadType:
+                    operand = metadataDatabase.LoadType(new Integer(BitConverter.ToInt64(operandData, 0)));
                     break;
                 default:
                     throw new ArgumentOutOfRangeException("opcode");
