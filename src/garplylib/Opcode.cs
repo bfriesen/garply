@@ -3,6 +3,11 @@
     public enum Opcode : ushort
     {
         Nop,
+        GetType,
+        TypeName,
+        TypeBaseType,
+        TypeIs,
+        TypeEquals,
         LoadBoolean,
         LoadString,
         LoadInteger,
