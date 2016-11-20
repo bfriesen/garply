@@ -38,6 +38,31 @@ namespace garply
             return new Instruction(Opcode.LoadType, value);
         }
 
+        public static new Instruction GetType()
+        {
+            return new Instruction(Opcode.GetType);
+        }
+
+        public static Instruction TypeName()
+        {
+            return new Instruction(Opcode.TypeName);
+        }
+
+        public static Instruction TypeBaseType()
+        {
+            return new Instruction(Opcode.TypeBaseType);
+        }
+
+        public static Instruction TypeIs()
+        {
+            return new Instruction(Opcode.TypeIs);
+        }
+
+        public static Instruction TypeEquals()
+        {
+            return new Instruction(Opcode.TypeEquals);
+        }
+
         public static Instruction Return()
         {
             return new Instruction(Opcode.Return);

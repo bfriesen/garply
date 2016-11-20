@@ -10,6 +10,11 @@ namespace garply
             {
                 case Opcode.Nop:
                 case Opcode.Return:
+                case Opcode.GetType:
+                case Opcode.TypeName:
+                case Opcode.TypeBaseType:
+                case Opcode.TypeIs:
+                case Opcode.TypeEquals:
                     return 0;
                 case Opcode.LoadBoolean:
                     return 1;

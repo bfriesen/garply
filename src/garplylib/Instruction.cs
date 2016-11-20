@@ -24,6 +24,11 @@ namespace garply
                 case Opcode.LoadInteger:
                 case Opcode.LoadFloat:
                 case Opcode.LoadType:
+                case Opcode.GetType:
+                case Opcode.TypeName:
+                case Opcode.TypeBaseType:
+                case Opcode.TypeIs:
+                case Opcode.TypeEquals:
                 case Opcode.Return:
                     break;
                 case Opcode.Reserved1:
@@ -77,6 +82,11 @@ namespace garply
             {
                 case Opcode.Nop:
                 case Opcode.Return:
+                case Opcode.GetType:
+                case Opcode.TypeName:
+                case Opcode.TypeBaseType:
+                case Opcode.TypeIs:
+                case Opcode.TypeEquals:
                     operand = default(EmptyOperand);
                     break;
                 case Opcode.LoadBoolean:
