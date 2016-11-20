@@ -10,6 +10,11 @@ namespace garply
             {
                 case Opcode.Nop:
                     return 0;
+                case Opcode.LoadBoolean:
+                    return 1;
+                case Opcode.LoadInteger:
+                case Opcode.LoadFloat:
+                    return 8;
                 case Opcode.Reserved1:
                 case Opcode.Reserved2:
                 case Opcode.Reserved3:

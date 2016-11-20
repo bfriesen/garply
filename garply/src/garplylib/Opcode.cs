@@ -3,6 +3,9 @@
     public enum Opcode : ushort
     {
         Nop,
+        LoadBoolean,
+        LoadInteger,
+        LoadFloat,
         Reserved1 = Instruction.MarkerByte1,
         Reserved2 = Instruction.MarkerByte2,
         Reserved3 = Instruction.MarkerByte3,
