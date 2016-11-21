@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace garply
+﻿namespace garply
 {
     public static class Instructions
     {

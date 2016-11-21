@@ -2,6 +2,6 @@
 {
     public interface IFirstClassType
     {
-        Type Type { get; }
+        IType Type { get; }
     }
 }

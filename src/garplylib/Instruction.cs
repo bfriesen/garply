@@ -19,16 +19,16 @@ namespace garply
             switch (opcode)
             {
                 case Opcode.Nop:
-                case Opcode.LoadBoolean:
-                case Opcode.LoadString:
-                case Opcode.LoadInteger:
-                case Opcode.LoadFloat:
-                case Opcode.LoadType:
                 case Opcode.GetType:
                 case Opcode.TypeName:
                 case Opcode.TypeBaseType:
                 case Opcode.TypeIs:
                 case Opcode.TypeEquals:
+                case Opcode.LoadBoolean:
+                case Opcode.LoadString:
+                case Opcode.LoadInteger:
+                case Opcode.LoadFloat:
+                case Opcode.LoadType:
                 case Opcode.Return:
                     break;
                 case Opcode.Reserved1:
@@ -102,7 +102,10 @@ namespace garply
                     operand = new Float(BitConverter.ToDouble(operandData, 0));
                     break;
                 case Opcode.LoadType:
-                    operand = metadataDatabase.LoadType(new Integer(BitConverter.ToInt64(operandData, 0)));
+                    operand = metadataDatabase.LoadType(new Integer(BitConverter.ToInt64(operandData, 0))) as IOperand;
+#if UNSTABLE
+                    if (operand == null) throw new InvalidOperationException("Loaded");
+#endif
                     break;
                 default:
                     throw new ArgumentOutOfRangeException("opcode");

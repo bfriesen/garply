@@ -1,19 +1,31 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 
 namespace garply
 {
+    [DebuggerDisplay("{DebuggerDisplay}")]
     public class String : IFirstClassType, IOperand
     {
+        private String(IType type)
+        {
+            Value = "";
+            Type = type;
+        }
+
         public String(string value)
         {
 #if UNSTABLE
             if (value == null) throw new ArgumentNullException("value");
 #endif
             Value = value;
+            Type = value == "" ? Types.Empty : Types.String;
         }
 
-        public Type Type => Type.StringType;
+        public static String Empty { get; } = new String(Types.Empty);
+        public static String Error { get; } = new String(Types.Error);
+
+        public IType Type { get; }
 
         public string Value { get; }
 
@@ -35,6 +47,25 @@ namespace garply
         public override int GetHashCode()
         {
             return Value.GetHashCode();
+        }
+
+        private string DebuggerDisplay
+        {
+            get
+            {
+                if (Type.Equals(Types.Empty))
+                {
+                    return "empty<string>";
+                }
+                else if (Type.Equals(Types.Error))
+                {
+                    return "error<string>";
+                }
+                else
+                {
+                    return Value.ToString();
+                }
+            }
         }
     }
 }
