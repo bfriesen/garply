@@ -1,32 +1,60 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
+using System.Text;
 
 namespace garply
 {
-    public sealed class Type : IFirstClassType, IOperand
+    [DebuggerDisplay("<{DebuggerDisplay,nq}>")]
+    public class Type : IType, IOperand
     {
-        public static Type TypeType { get; } = new Type(Name.TypeName);
-        public static Type TupleType { get; } = new Type(Name.TupleName);
-        public static Type ListType { get; } = new Type(Name.ListName);
-        public static Type BooleanType { get; } = new Type(Name.BooleanName, ValueType);
-        public static Type StringType { get; } = new Type(Name.StringName, ValueType);
-        public static Type IntegerType { get; } = new Type(Name.IntegerName, NumberType);
-        public static Type FloatType { get; } = new Type(Name.FloatName, NumberType);
-        public static Type NumberType { get; } = new Type(Name.NumberName, ValueType);
-        public static Type ValueType { get; } = new Type(Name.ValueName);
+        private readonly IType _type;
 
-        public Type(Name name, Type baseType = null)
+        /// <summary>
+        /// Constructor used to initialize the Type type.
+        /// </summary>
+        internal Type(IType emptyType)
+        {
+            _type = this;
+            Name = Names.Type;
+            BaseType = emptyType;
+        }
+
+        /// <summary>
+        /// Constructor used to initialize the Empty and Error types.
+        /// </summary>
+        /// <param name="name">Either Empty or Error.</param>
+        internal Type(Name name)
         {
 #if UNSTABLE
             if (name == null) throw new ArgumentNullException("name");
+            if (!(name.ParentName.Value == "garply"
+                && name.ParentName.ParentName.Value == ""
+                && (name.Value.Equals("empty") || name.Value.Equals("error"))))
+                    throw new ArgumentException("The 'name' parameter must be Empty or Error.", "name");
 #endif
+            _type = this;
+            Name = name;
+            BaseType = this;
+        }
+
+        public Type(Name name, IType baseType)
+        {
+#if UNSTABLE
+            if (name == null) throw new ArgumentNullException("name");
+            if (baseType == null) throw new ArgumentNullException("baseType");
+#endif
+            _type = Types.Type;
             Name = name;
             BaseType = baseType;
         }
 
-        public Name Name { get; }
-        public Type BaseType { get; }
-        Type IFirstClassType.Type => TypeType;
+        public static IType Empty => Types.Empty;
+        public static IType Error => Types.Error;
+
+        public IName Name { get; }
+        public IType BaseType { get; }
+        IType IFirstClassType.Type { get { return _type; } }
 
         public void Write(BinaryWriter writer, IMetadataDatabase metadataDatabase)
         {
@@ -34,7 +62,7 @@ namespace garply
             id.Write(writer, metadataDatabase);
         }
 
-        public bool Is(Type other)
+        public bool Is(IType other)
         {
 #if UNSTABLE
             if (other == null) throw new ArgumentNullException("other");
@@ -46,7 +74,19 @@ namespace garply
 
         public override int GetHashCode()
         {
-            return unchecked((Name.GetHashCode() * 397) ^ (BaseType == null ? 0 : BaseType.GetHashCode()));
+            unchecked
+            {
+                var hashcode = Name.GetHashCode();
+                if (BaseType.Type.Equals(Types.Empty))
+                {
+                    hashcode = (hashcode * 397) ^ 0;
+                }
+                else
+                {
+                    hashcode = (hashcode * 397) ^ BaseType.GetHashCode();
+                }
+                return hashcode;
+            }
         }
 
         public override bool Equals(object obj)
@@ -68,6 +108,22 @@ namespace garply
             if (!Name.Equals(other.Name)) return false;
             if (BaseType == null) return other.BaseType == null;
             return BaseType.Equals(other.BaseType);
+        }
+
+        private string DebuggerDisplay
+        {
+            get
+            {
+                var sb = new StringBuilder();
+                IName name = Name;
+                while (name is Name)
+                {
+                    if (sb.Length > 0) sb.Insert(0, '.');
+                    sb.Insert(0, name.Value);
+                    name = name.ParentName;
+                }
+                return sb.ToString();
+            }
         }
     }
 }

@@ -1,15 +1,26 @@
-﻿using System.IO;
+﻿using System.Diagnostics;
+using System.IO;
 
 namespace garply
 {
+    [DebuggerDisplay("{DebuggerDisplay,nq}")]
     public class Float : IFirstClassType, IOperand
     {
+        private Float(IType type)
+        {
+            Type = type;
+        }
+
         public Float(double value)
         {
             Value = value;
+            Type = Types.Float;
         }
 
-        public Type Type => Type.FloatType;
+        public static Float Empty { get; } = new Float(Types.Empty);
+        public static Float Error { get; } = new Float(Types.Error);
+
+        public IType Type { get; }
 
         public double Value { get; }
 
@@ -30,6 +41,25 @@ namespace garply
         public override int GetHashCode()
         {
             return Value.GetHashCode();
+        }
+
+        private string DebuggerDisplay
+        {
+            get
+            {
+                if (Type.Equals(Types.Empty))
+                {
+                    return "empty<float>";
+                }
+                else if (Type.Equals(Types.Error))
+                {
+                    return "error<float>";
+                }
+                else
+                {
+                    return Value.ToString();
+                }
+            }
         }
     }
 }

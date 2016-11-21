@@ -1,15 +1,26 @@
-﻿using System.IO;
+﻿using System.Diagnostics;
+using System.IO;
 
 namespace garply
 {
+    [DebuggerDisplay("{DebuggerDisplay,nq}")]
     public class Boolean : IFirstClassType, IOperand
     {
+        private Boolean(IType type)
+        {
+            Type = type;
+        }
+
         public Boolean(bool value)
         {
             Value = value;
+            Type = Types.Boolean;
         }
 
-        public Type Type => Type.BooleanType;
+        public static Boolean Empty { get; } = new Boolean(Types.Empty);
+        public static Boolean Error { get; } = new Boolean(Types.Error);
+
+        public IType Type { get; }
 
         public bool Value { get; }
 
@@ -30,6 +41,25 @@ namespace garply
         public override int GetHashCode()
         {
             return Value.GetHashCode();
+        }
+
+        private string DebuggerDisplay
+        {
+            get
+            {
+                if (Type.Equals(Types.Empty))
+                {
+                    return "empty<boolean>";
+                }
+                else if (Type.Equals(Types.Error))
+                {
+                    return "error<boolean>";
+                }
+                else
+                {
+                    return Value.ToString();
+                }
+            }
         }
     }
 }

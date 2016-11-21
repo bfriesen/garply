@@ -8,6 +8,14 @@
         TypeBaseType,
         TypeIs,
         TypeEquals,
+        TupleArity, // TODO
+        TupleItem,  // TODO
+        ListHead,   // TODO
+        ListTail,   // TODO
+        NewTuple,   // TODO
+        ListEmpty,  // TODO
+        ListAdd,    // TODO
+        PushArg,    // TODO
         LoadBoolean,
         LoadString,
         LoadInteger,

@@ -4,7 +4,7 @@ namespace garply
 {
     public static class FirstClassTypeIsExtension
     {
-        public static bool Is(this IFirstClassType value, Type targetType)
+        public static bool Is(this IFirstClassType value, IType targetType)
         {
 #if UNSTABLE
             if (value == null) throw new ArgumentNullException("typed");
