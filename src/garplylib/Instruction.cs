@@ -1,9 +1,10 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
-using System.Threading;
 
 namespace garply
 {
+    [DebuggerDisplay("{DebuggerDisplay,nq}")]
     public struct Instruction
     {
         public const byte MarkerByte1 = 251;
@@ -16,31 +17,6 @@ namespace garply
 
         public Instruction(Opcode opcode, IOperand operand = null)
         {
-            switch (opcode)
-            {
-                case Opcode.Nop:
-                case Opcode.GetType:
-                case Opcode.TypeName:
-                case Opcode.TypeBaseType:
-                case Opcode.TypeIs:
-                case Opcode.TypeEquals:
-                case Opcode.LoadBoolean:
-                case Opcode.LoadString:
-                case Opcode.LoadInteger:
-                case Opcode.LoadFloat:
-                case Opcode.LoadType:
-                case Opcode.Return:
-                    break;
-                case Opcode.Reserved1:
-                case Opcode.Reserved2:
-                case Opcode.Reserved3:
-                case Opcode.Reserved4:
-                case Opcode.Reserved5:
-                    throw new ArgumentException($"Cannot directly use reserved opcode value: {opcode}", "opcode");
-                default:
-                    throw new ArgumentOutOfRangeException("opcode", $"Invalid opcode value: {opcode}");
-            }
-
             Opcode = opcode;
             _operand = operand ?? default(EmptyOperand);
         }
@@ -81,12 +57,19 @@ namespace garply
             switch (opcode)
             {
                 case Opcode.Nop:
+                case Opcode.PushArg:
                 case Opcode.Return:
                 case Opcode.GetType:
                 case Opcode.TypeName:
                 case Opcode.TypeBaseType:
                 case Opcode.TypeIs:
-                case Opcode.TypeEquals:
+                case Opcode.TupleArity:
+                case Opcode.ListEmpty:
+                case Opcode.ListAdd:
+                //case Opcode.TypeName:
+                //case Opcode.TypeBaseType:
+                //case Opcode.TypeIs:
+                //case Opcode.TypeEquals:
                     operand = default(EmptyOperand);
                     break;
                 case Opcode.LoadBoolean:
@@ -112,6 +95,14 @@ namespace garply
                     if (operand == null) throw new InvalidOperationException("Loaded");
 #endif
                     break;
+                case Opcode.NewTuple:
+                    var arity = operandData[0];
+                    operand = new Integer(arity);
+                    break;
+                case Opcode.TupleItem:
+                    var index = BitConverter.ToInt64(operandData, 0);
+                    operand = new Integer(index);
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException("opcode");
             }
@@ -134,6 +125,69 @@ namespace garply
             if (_operand != null)
             {
                 _operand.Write(writer, metadataDatabase);
+            }
+        }
+
+        internal string DebuggerDisplay
+        {
+            get
+            {
+                string operand;
+
+                var firstClass = Operand as IFirstClassType;
+                if (firstClass != null)
+                {
+                    if (firstClass.Type.Equals(Types.Empty))
+                    {
+                        operand = "empty";
+                    }
+                    else if (firstClass.Type.Equals(Types.Error))
+                    {
+                        operand = "error";
+                    }
+                    else
+                    {
+                        operand = Operand.ToString();
+                    }
+                }
+                else if (Operand is EmptyOperand)
+                {
+                    operand = "empty";
+                }
+                else if (Operand is String)
+                {
+                    operand = ((String)Operand).DebuggerDisplay;
+                }
+                else if (Operand is Boolean)
+                {
+                    operand = ((Boolean)Operand).DebuggerDisplay;
+                }
+                else if (Operand is Float)
+                {
+                    operand = ((Float)Operand).DebuggerDisplay;
+                }
+                else if (Operand is Integer)
+                {
+                    operand = ((Integer)Operand).DebuggerDisplay;
+                }
+                else if (Operand is Tuple)
+                {
+                    operand = ((Tuple)Operand).DebuggerDisplay;
+                }
+                else if (Operand is List)
+                {
+                    operand = ((List)Operand).DebuggerDisplay;
+                }
+                else if (Operand is Type)
+                {
+                    operand = ((Type)Operand).DebuggerDisplay;
+                }
+                else
+                {
+                    operand = Operand.ToString();
+                }
+
+                return $"{Opcode}:{operand}";
             }
         }
     }

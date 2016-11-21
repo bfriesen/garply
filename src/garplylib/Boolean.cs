@@ -17,6 +17,9 @@ namespace garply
             Type = Types.Boolean;
         }
 
+        public static Boolean True { get; } = new Boolean(true);
+        public static Boolean False { get; } = new Boolean(false);
+
         public static Boolean Empty { get; } = new Boolean(Types.Empty);
         public static Boolean Error { get; } = new Boolean(Types.Error);
 
@@ -43,7 +46,7 @@ namespace garply
             return Value.GetHashCode();
         }
 
-        private string DebuggerDisplay
+        internal string DebuggerDisplay
         {
             get
             {

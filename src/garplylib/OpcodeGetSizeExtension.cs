@@ -9,14 +9,22 @@ namespace garply
             switch (opcode)
             {
                 case Opcode.Nop:
+                case Opcode.PushArg:
                 case Opcode.Return:
                 case Opcode.GetType:
                 case Opcode.TypeName:
                 case Opcode.TypeBaseType:
                 case Opcode.TypeIs:
-                case Opcode.TypeEquals:
+                case Opcode.ListEmpty:
+                case Opcode.ListAdd:
+                //case Opcode.TypeName:
+                //case Opcode.TypeBaseType:
+                //case Opcode.TypeIs:
+                //case Opcode.TypeEquals:
                     return 0;
                 case Opcode.LoadBoolean:
+                case Opcode.TupleItem:
+                case Opcode.NewTuple:
                     return 1;
                 case Opcode.LoadString:
                 case Opcode.LoadInteger:

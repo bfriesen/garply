@@ -4,5 +4,6 @@
     {
         IName Name { get; }
         IType BaseType { get; }
+        Boolean Is(IType other);
     }
 }

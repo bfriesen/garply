@@ -56,9 +56,39 @@
             return new Instruction(Opcode.TypeIs);
         }
 
-        public static Instruction TypeEquals()
+        //public static Instruction TypeEquals()
+        //{
+        //    return new Instruction(Opcode.TypeEquals);
+        //}
+
+        public static Instruction TupleArity()
         {
-            return new Instruction(Opcode.TypeEquals);
+            return new Instruction(Opcode.TupleArity);
+        }
+
+        public static Instruction TupleItem(Integer index)
+        {
+            return new Instruction(Opcode.TupleItem, index);
+        }
+
+        public static Instruction NewTuple(Integer arity)
+        {
+            return new Instruction(Opcode.NewTuple, arity);
+        }
+
+        public static Instruction ListEmpty()
+        {
+            return new Instruction(Opcode.ListEmpty);
+        }
+
+        public static Instruction ListAdd()
+        {
+            return new Instruction(Opcode.ListAdd);
+        }
+
+        public static Instruction PushArg()
+        {
+            return new Instruction(Opcode.PushArg);
         }
 
         public static Instruction Return()
