@@ -59,11 +59,11 @@ namespace garply
             if (other == null) throw new ArgumentNullException("other");
 #endif
             if (!Value.Equals(other.Value, StringComparison.Ordinal)) return false;
-            if (ParentName == null) return other.ParentName == null;
+            if (ParentName.Type.Equals(Types.Empty)) return other.ParentName.Type.Equals(Types.Empty);
             else return ParentName.Equals(other.ParentName);
         }
 
-        private string DebuggerDisplay
+        internal string DebuggerDisplay
         {
             get
             {

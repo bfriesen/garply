@@ -43,7 +43,7 @@ namespace garply
             return Value.GetHashCode();
         }
 
-        private string DebuggerDisplay
+        internal string DebuggerDisplay
         {
             get
             {

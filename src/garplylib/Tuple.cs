@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -6,7 +7,7 @@ using System.Diagnostics;
 namespace garply
 {
     [DebuggerDisplay("{DebuggerDisplay,nq}")]
-    public class Tuple : IFirstClassType
+    public class Tuple : IFirstClassType, IEnumerable
     {
         private readonly Items _items = new Items();
         
@@ -14,6 +15,19 @@ namespace garply
         {
             Arity = new Integer(0);
             Type = type;
+        }
+
+        public Tuple(Integer arity, IExecutionContext context)
+        {
+            for (int i = 0; i < arity.Value; i++)
+            {
+                _items.Add(context.Pop());
+            }
+#if UNSTABLE
+            _items.Lock();
+#endif
+            Arity = arity;
+            Type = arity.Value == 0 ? Types.Empty : Types.Tuple;
         }
 
         public Tuple(IFirstClassType[] items)
@@ -145,7 +159,7 @@ namespace garply
 #endif
         }
 
-        private string DebuggerDisplay
+        internal string DebuggerDisplay
         {
             get
             {
@@ -163,5 +177,7 @@ namespace garply
                 }
             }
         }
+
+        IEnumerator IEnumerable.GetEnumerator() => _items.GetEnumerator();
     }
 }

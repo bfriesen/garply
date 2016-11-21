@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
@@ -30,19 +29,56 @@ namespace garply
             var l = List.Empty.Add(f).Add(b1).Add(b2).Add(s);
             var t = new Tuple(new IFirstClassType[] { f, b1, b2, s, l });
 
+            foreach (var item in l)
+            {
+
+            }
+
+            // match x on
+            // integer i : i > 0 -> ...
+            // integer -> ...
+            // (integer i | i > 0) -> ...
+            // (integer) -> ...
+            // (x) -> ...
+            // 
+            // (_) -> ...
+            // () -> ...
+            // [integer i : i > 0, integer j : j > 0] -> ...
+            // _ -> ...
+
+            var helloWorld = new String("Hello, world!");
+
             var metadataDatabase = new MetadataDatabase();
             Types.RegisterTo(metadataDatabase);
-            metadataDatabase.RegisterString(new String("Hello, world!"));
+            metadataDatabase.RegisterString(helloWorld);
 
             var expression = new ExpressionBuilder()
-                .Add(Instructions.LoadType(metadataDatabase.GetTypeId(Types.String), metadataDatabase))
-                .Add(Instructions.LoadType(metadataDatabase.GetTypeId(Types.Boolean), metadataDatabase))
-                .Add(Instructions.TypeEquals())
+                //.Add(Instructions.LoadFloat(new Float(123.45)))
+                //.Add(Instructions.LoadInteger(new Integer(123)))
+                //.Add(Instructions.LoadBoolean(Boolean.True))
+                //.Add(Instructions.LoadString(metadataDatabase.GetStringId(helloWorld), metadataDatabase))
+                //.Add(Instructions.LoadType(metadataDatabase.GetTypeId(Types.String), metadataDatabase))
+                //.Add(Instructions.PushArg())
+                //.Add(Instructions.LoadFloat(f))
+                //.Add(Instructions.NewTuple(new Integer(2)))
+                //.Add(Instructions.ListEmpty())
+                //.Add(Instructions.LoadType(metadataDatabase.GetTypeId(Types.String), metadataDatabase))
+                //.Add(Instructions.ListAdd())
+                //.Add(Instructions.LoadFloat(new Float(123.45)))
+                //.Add(Instructions.ListAdd())
+                //.Add(Instructions.LoadInteger(new Integer(123)))
+                //.Add(Instructions.ListAdd())
+                .Add(Instructions.PushArg())
+                .Add(Instructions.GetType())
+                .Add(Instructions.LoadType(metadataDatabase.GetTypeId(Types.Value), metadataDatabase))
+                .Add(Instructions.TypeIs())
                 .Add(Instructions.Return())
-                .SetArity(1)
-                .SetConstants(0)
-                .SetVariables(0)
                 .Build();
+
+            var context = new ExecutionContext();
+            context.Push(f);
+
+            var x = expression.Evaluate(context);
 
             var stream = new MemoryStream();
             using (var writer = new BinaryWriter(stream, Encoding.UTF8, true)) expression.Write(writer, metadataDatabase);
@@ -50,7 +86,26 @@ namespace garply
 
             stream.Position = 0;
             var expression2 = Expression.Read(stream, metadataDatabase);
+            context = new ExecutionContext();
+            context.Push(EmptyValue.Instance);
+            var x2 = expression2.Evaluate(context);
         }
+
+        private class ExecutionContext : IExecutionContext
+        {
+            private readonly Stack<IFirstClassType> _stack = new Stack<IFirstClassType>();
+
+            public IFirstClassType Pop()
+            {
+                return _stack.Pop();
+            }
+
+            public void Push(IFirstClassType value)
+            {
+                _stack.Push(value);
+            }
+        }
+
 
         private class MetadataDatabase : IMetadataDatabase
         {

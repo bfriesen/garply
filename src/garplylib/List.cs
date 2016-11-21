@@ -1,15 +1,17 @@
-﻿using System.Diagnostics;
+﻿using System.Collections;
+using System.Diagnostics;
 
 namespace garply
 {
     [DebuggerDisplay("{DebuggerDisplay,nq}")]
-    public class List : IFirstClassType
+    public class List : IFirstClassType, IEnumerable
     {
         private List(IType type)
         {
-            Head = new EmptyHead();
+            Head = EmptyValue.Instance;
             Tail = this;
             Type = type;
+            Count = new Integer(0);
         }
 
         private List(IFirstClassType head, List tail)
@@ -17,6 +19,7 @@ namespace garply
             Head = head;
             Tail = tail;
             Type = Types.List;
+            Count = new Integer(tail.Count.Value + 1);
         }
 
         public static List Empty { get; } = new List(Types.Empty);
@@ -30,8 +33,39 @@ namespace garply
         public IType Type { get; }
         public IFirstClassType Head { get; }
         public List Tail { get; }
+        public Integer Count { get; }
 
-        private string DebuggerDisplay
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return new ListEnumerator(this);
+        }
+
+        private class ListEnumerator : IEnumerator
+        {
+            private readonly List _seed;
+            private List _list;
+
+            public ListEnumerator(List list)
+            {
+                _seed = list.Add(ErrorValue.Instance);
+                _list = _seed;
+            }
+
+            public object Current => _list.Head;
+
+            public bool MoveNext()
+            {
+                _list = _list.Tail;
+                return !_list.Type.Equals(Types.Empty);
+            }
+
+            public void Reset()
+            {
+                _list = _seed;
+            }
+        }
+
+        internal string DebuggerDisplay
         {
             get
             {
@@ -45,7 +79,7 @@ namespace garply
                 }
                 else
                 {
-                    return $"list({this.Count().Value})";
+                    return $"list({Count.Value})";
                 }
             }
         }

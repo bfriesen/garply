@@ -44,13 +44,13 @@ namespace garply
             id.Write(writer, metadataDatabase);
         }
 
-        public bool Is(IType other)
+        public Boolean Is(IType other)
         {
 #if UNSTABLE
             if (other == null) throw new ArgumentNullException("other");
 #endif
-            if (Equals(other)) return true;
-            if (BaseType == null) return false;
+            if (Equals(other)) return Boolean.True;
+            if (BaseType.Equals(Types.Empty)) return Boolean.False;
             return BaseType.Is(other);
         }
 
@@ -88,11 +88,11 @@ namespace garply
             if (other == null) throw new ArgumentNullException("other");
 #endif
             if (!Name.Equals(other.Name)) return false;
-            if (BaseType == null) return other.BaseType == null;
+            if (BaseType.Equals(Types.Empty)) return other.BaseType.Equals(Types.Empty);
             return BaseType.Equals(other.BaseType);
         }
 
-        private string DebuggerDisplay
+        internal string DebuggerDisplay
         {
             get
             {

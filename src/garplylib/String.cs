@@ -57,7 +57,7 @@ namespace garply
             }
         }
 
-        private string DebuggerDisplay
+        internal string DebuggerDisplay
         {
             get
             {
