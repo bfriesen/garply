@@ -10,15 +10,22 @@ namespace garply
 
         private Instruction[] _instructions;
 
-        public Expression(Instruction[] instructions)
+        public Expression(Instruction[] instructions, byte arity, byte constants, byte variables)
         {
             _instructions = instructions;
+            Arity = arity;
+            Constants = constants;
+            Variables = variables;
         }
 
         public IReadOnlyList<Instruction> Instructions
         {
             get { return _instructions ?? (_instructions = _emptyInstructions); }
         }
+
+        public byte Arity { get; }
+        public byte Constants { get; }
+        public byte Variables { get; }
 
         public static Expression Read(Stream stream, IMetadataDatabase metadataDatabase)
         {

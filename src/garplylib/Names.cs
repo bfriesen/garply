@@ -2,6 +2,8 @@
 {
     public static class Names
     {
+        public static IName Empty => Name.Empty;
+        public static IName Error => Name.Error;
         public static Name Garply { get; } = new Name("garply");
         public static Name Type { get; } = new Name("type", Garply);
         public static Name Name { get; } = new Name("name", Garply);

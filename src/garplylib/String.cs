@@ -46,7 +46,15 @@ namespace garply
 
         public override int GetHashCode()
         {
-            return Value.GetHashCode();
+            unchecked
+            {
+                var hashcode = 0;
+                foreach (var c in Value)
+                {
+                    hashcode = (hashcode * 397) ^ c;
+                }
+                return hashcode;
+            }
         }
 
         private string DebuggerDisplay

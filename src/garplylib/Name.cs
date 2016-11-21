@@ -7,10 +7,8 @@ namespace garply
     [DebuggerDisplay("{DebuggerDisplay}")]
     public class Name : IName
     {
-        private readonly Lazy<IType> _type;
-
         public Name(string value)
-            : this(value, new EmptyName())
+            : this(value, Empty)
         {
         }
 
@@ -34,15 +32,12 @@ namespace garply
         {
             unchecked
             {
-                var hashcode = Value.GetHashCode();
-                if (ParentName.Type.Equals(Types.Empty))
+                var hashcode = 0;
+                foreach (var c in Value)
                 {
-                    hashcode = (hashcode * 397) ^ 0;
+                    hashcode = (hashcode * 397) ^ c;
                 }
-                else
-                {
-                    hashcode = (hashcode * 397) ^ ParentName.GetHashCode();
-                }
+                hashcode = (hashcode * 397) ^ (ParentName.Type.Equals(Types.Empty) ? 0 : ParentName.GetHashCode());
                 return hashcode;
             }
         }
