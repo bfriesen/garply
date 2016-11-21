@@ -20,24 +20,6 @@ namespace garply
             BaseType = emptyType;
         }
 
-        /// <summary>
-        /// Constructor used to initialize the Empty and Error types.
-        /// </summary>
-        /// <param name="name">Either Empty or Error.</param>
-        internal Type(Name name)
-        {
-#if UNSTABLE
-            if (name == null) throw new ArgumentNullException("name");
-            if (!(name.ParentName.Value == "garply"
-                && name.ParentName.ParentName.Value == ""
-                && (name.Value.Equals("empty") || name.Value.Equals("error"))))
-                    throw new ArgumentException("The 'name' parameter must be Empty or Error.", "name");
-#endif
-            _type = this;
-            Name = name;
-            BaseType = this;
-        }
-
         public Type(Name name, IType baseType)
         {
 #if UNSTABLE

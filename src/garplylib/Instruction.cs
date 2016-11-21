@@ -90,19 +90,24 @@ namespace garply
                     operand = default(EmptyOperand);
                     break;
                 case Opcode.LoadBoolean:
-                    operand = new Boolean(BitConverter.ToBoolean(operandData, 0));
+                    var booleanValue = BitConverter.ToBoolean(operandData, 0);
+                    operand = new Boolean(booleanValue);
                     break;
                 case Opcode.LoadString:
-                    operand = metadataDatabase.LoadString(new Integer(BitConverter.ToInt64(operandData, 0)));
+                    var stringId = new Integer(BitConverter.ToInt64(operandData, 0));
+                    operand = metadataDatabase.LoadString(stringId);
                     break;
                 case Opcode.LoadInteger:
-                    operand = new Integer(BitConverter.ToInt64(operandData, 0));
+                    var integerValue = BitConverter.ToInt64(operandData, 0);
+                    operand = new Integer(integerValue);
                     break;
                 case Opcode.LoadFloat:
-                    operand = new Float(BitConverter.ToDouble(operandData, 0));
+                    var floatValue = BitConverter.ToDouble(operandData, 0);
+                    operand = new Float(floatValue);
                     break;
                 case Opcode.LoadType:
-                    operand = metadataDatabase.LoadType(new Integer(BitConverter.ToInt64(operandData, 0))) as IOperand;
+                    var typeId = new Integer(BitConverter.ToInt64(operandData, 0));
+                    operand = metadataDatabase.LoadType(typeId) as IOperand;
 #if UNSTABLE
                     if (operand == null) throw new InvalidOperationException("Loaded");
 #endif
@@ -129,28 +134,6 @@ namespace garply
             if (_operand != null)
             {
                 _operand.Write(writer, metadataDatabase);
-            }
-        }
-
-        private static class Buffer
-        {
-            private static ThreadLocal<byte[]> _zero = new ThreadLocal<byte[]>(() => new byte[0]);
-            private static ThreadLocal<byte[]> _one = new ThreadLocal<byte[]>(() => new byte[1]);
-            private static ThreadLocal<byte[]> _two = new ThreadLocal<byte[]>(() => new byte[2]);
-            private static ThreadLocal<byte[]> _four = new ThreadLocal<byte[]>(() => new byte[4]);
-            private static ThreadLocal<byte[]> _eight = new ThreadLocal<byte[]>(() => new byte[8]);
-
-            public static byte[] Get(int size)
-            {
-                switch (size)
-                {
-                    case 0: return _zero.Value;
-                    case 1: return _one.Value;
-                    case 2: return _two.Value;
-                    case 4: return _four.Value;
-                    case 8: return _eight.Value;
-                    default: throw new ArgumentOutOfRangeException("size", "Valid values for 'size' are 0, 1, 2, 4, and 8.");
-                }
             }
         }
     }

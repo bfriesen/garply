@@ -5,19 +5,40 @@ namespace garply
 {
     public class ExpressionBuilder : IEnumerable
     {
-        private readonly List<Instruction> _instructions = new List<Instruction>();
+        public byte Arity { get; private set; }
+        public byte Constants { get; private set; }
+        public byte Variables { get; private set; }
+        public List<Instruction> Instructions { get; } = new List<Instruction>();
+
+        public ExpressionBuilder SetArity(byte arity)
+        {
+            Arity = arity;
+            return this;
+        }
+
+        public ExpressionBuilder SetConstants(byte constants)
+        {
+            Constants = constants;
+            return this;
+        }
+
+        public ExpressionBuilder SetVariables(byte variables)
+        {
+            Variables = variables;
+            return this;
+        }
 
         public ExpressionBuilder Add(Instruction instruction)
         {
-            _instructions.Add(instruction);
+            Instructions.Add(instruction);
             return this;
         }
 
         public Expression Build()
         {
-            return new Expression(_instructions.ToArray());
+            return new Expression(Instructions.ToArray(), Arity, Constants, Variables);
         }
 
-        IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)_instructions).GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)Instructions).GetEnumerator();
     }
 }
