@@ -2,31 +2,28 @@
 using System.Diagnostics;
 using System.Text;
 
-namespace garply
+namespace Garply
 {
     [DebuggerDisplay("{DebuggerDisplay}")]
-    public class Name : IName
+    public class Name
     {
         public Name(string value)
-            : this(value, Empty)
         {
+            Debug.Assert(value != null);
+            Value = value;
+            ParentName = this;
         }
 
-        public Name(string value, IName parentName)
+        public Name(string value, Name parentName)
         {
-#if UNSTABLE
-            if (value == null) throw new ArgumentNullException("value");
-#endif
+            Debug.Assert(value != null);
             Value = value;
             ParentName = parentName;
         }
 
-        public static IName Empty { get; } = new EmptyName();
-        public static IName Error { get; } = new ErrorName();
-
-        public IType Type => Types.Name;
         public string Value { get; }
-        public IName ParentName { get; }
+        public Name ParentName { get; }
+        public bool HasParentName => !ReferenceEquals(this, ParentName);
 
         public override int GetHashCode()
         {
@@ -37,16 +34,15 @@ namespace garply
                 {
                     hashcode = (hashcode * 397) ^ c;
                 }
-                hashcode = (hashcode * 397) ^ (ParentName.Type.Equals(Types.Empty) ? 0 : ParentName.GetHashCode());
+
+                hashcode = (hashcode * 397) ^ (HasParentName ? 0 : ParentName.GetHashCode());
                 return hashcode;
             }
         }
 
         public override bool Equals(object obj)
         {
-#if UNSTABLE
-            if (obj == null) throw new ArgumentNullException("obj");
-#endif
+            Debug.Assert(obj != null);
             if (ReferenceEquals(this, obj)) return true;
             var other = obj as Name;
             if (other == null) return false;
@@ -55,11 +51,9 @@ namespace garply
 
         public bool Equals(Name other)
         {
-#if UNSTABLE
-            if (other == null) throw new ArgumentNullException("other");
-#endif
+            Debug.Assert(other != null);
             if (!Value.Equals(other.Value, StringComparison.Ordinal)) return false;
-            if (ParentName.Type.Equals(Types.Empty)) return other.ParentName.Type.Equals(Types.Empty);
+            if (!HasParentName) return !other.HasParentName;
             else return ParentName.Equals(other.ParentName);
         }
 
@@ -68,7 +62,7 @@ namespace garply
             get
             {
                 var sb = new StringBuilder();
-                IName name = this;
+                Name name = this;
                 while (name is Name)
                 {
                     if (sb.Length > 0) sb.Insert(0, '.');

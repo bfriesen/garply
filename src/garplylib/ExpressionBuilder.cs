@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 
-namespace garply
+namespace Garply
 {
     public class ExpressionBuilder : IEnumerable
     {

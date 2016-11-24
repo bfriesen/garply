@@ -1,26 +1,15 @@
 ﻿using System.Diagnostics;
 using System.IO;
 
-namespace garply
+namespace Garply
 {
     [DebuggerDisplay("{DebuggerDisplay,nq}")]
-    public class Integer : IFirstClassType, IOperand
+    public class Integer : IOperand
     {
-        private Integer(IType type)
-        {
-            Type = type;
-        }
-
         public Integer(long value)
         {
             Value = value;
-            Type = Types.Integer;
         }
-
-        public static Integer Empty { get; } = new Integer(Types.Empty);
-        public static Integer Error { get; } = new Integer(Types.Error);
-
-        public IType Type { get; }
 
         public long Value { get; }
 
@@ -43,23 +32,6 @@ namespace garply
             return Value.GetHashCode();
         }
 
-        internal string DebuggerDisplay
-        {
-            get
-            {
-                if (Type.Equals(Types.Empty))
-                {
-                    return "empty<integer>";
-                }
-                else if (Type.Equals(Types.Error))
-                {
-                    return "error<integer>";
-                }
-                else
-                {
-                    return Value.ToString();
-                }
-            }
-        }
+        internal string DebuggerDisplay => Value.ToString();
     }
 }

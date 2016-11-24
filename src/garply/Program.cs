@@ -1,8 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text;
 
-namespace garply
+namespace Garply
 {
     public class Program
     {
@@ -22,14 +24,14 @@ namespace garply
             //stream = new MemoryStream();
             //instruction.Write(stream);
 
-            var f = new Float(123.456);
-            var b1 = new Boolean(true);
-            var b2 = new Boolean(false);
-            var s = new String("Hello, world!");
-            var l = List.Empty.Add(f).Add(b1).Add(b2).Add(s);
-            var t = new Tuple(new IFirstClassType[] { f, b1, b2, s, l });
+            var f = new Value(new Float(123.456));
+            var b1 = new Value(Boolean.Get(true));
+            var b2 = new Value(Boolean.Get(false));
+            var s = new Value(new String("Hello, world!"));
+            var l = new Value(List.Empty.Add(f).Add(b1).Add(b2).Add(s));
+            var t = new Value(new Tuple(new Value[] { f, b1, b2, s, l }));
 
-            foreach (var item in l)
+            foreach (var item in l.AsList)
             {
 
             }
@@ -49,7 +51,6 @@ namespace garply
             var helloWorld = new String("Hello, world!");
 
             var metadataDatabase = new MetadataDatabase();
-            Types.RegisterTo(metadataDatabase);
             metadataDatabase.RegisterString(helloWorld);
 
             var expression = new ExpressionBuilder()
@@ -70,7 +71,7 @@ namespace garply
                 //.Add(Instructions.ListAdd())
                 .Add(Instructions.PushArg())
                 .Add(Instructions.GetType())
-                .Add(Instructions.LoadType(metadataDatabase.GetTypeId(Types.Value), metadataDatabase))
+                .Add(Instructions.LoadType(Types.Value))
                 .Add(Instructions.TypeIs())
                 .Add(Instructions.Return())
                 .Build();
@@ -87,46 +88,33 @@ namespace garply
             stream.Position = 0;
             var expression2 = Expression.Read(stream, metadataDatabase);
             context = new ExecutionContext();
-            context.Push(EmptyValue.Instance);
+            context.Push(f);
             var x2 = expression2.Evaluate(context);
         }
 
         private class ExecutionContext : IExecutionContext
         {
-            private readonly Stack<IFirstClassType> _stack = new Stack<IFirstClassType>();
-
-            public IFirstClassType Pop()
-            {
-                return _stack.Pop();
-            }
-
-            public void Push(IFirstClassType value)
-            {
-                _stack.Push(value);
-            }
+            private readonly Stack<Value> _stack = new Stack<Value>();
+            public Value Pop() => _stack.Pop();
+            public void Push(Value value) => _stack.Push(value);
         }
-
 
         private class MetadataDatabase : IMetadataDatabase
         {
             private readonly Dictionary<String, Integer> _stringToId = new Dictionary<String, Integer>();
             private readonly Dictionary<Integer, String> _idToString = new Dictionary<Integer, String>();
 
-            private readonly Dictionary<Integer, Type> _idToType = new Dictionary<Integer, Type>();
-            private readonly Dictionary<Type, Integer> _typeToId = new Dictionary<Type, Integer>();
+            private readonly Dictionary<Tuple, Integer> _tupleToId = new Dictionary<Tuple, Integer>();
+            private readonly Dictionary<Integer, Tuple> _idToTuple = new Dictionary<Integer, Tuple>();
+
+            private readonly Dictionary<List, Integer> _listToId = new Dictionary<List, Integer>();
+            private readonly Dictionary<Integer, List> _idToList = new Dictionary<Integer, List>();
 
             public void RegisterString(String value)
             {
                 var hashCode = new Integer(value.GetHashCode());
                 _idToString[hashCode] = value;
                 _stringToId[value] = hashCode;
-            }
-
-            public void RegisterType(Type value)
-            {
-                var hashCode = new Integer(value.GetHashCode());
-                _idToType[hashCode] = value;
-                _typeToId[value] = hashCode;
             }
 
             public Integer GetStringId(String value)
@@ -139,14 +127,38 @@ namespace garply
                 return _idToString[id];
             }
 
-            public Integer GetTypeId(Type value)
+            public void RegisterTuple(Tuple value)
             {
-                return _typeToId[value];
+                var hashCode = new Integer(value.GetHashCode());
+                _idToTuple[hashCode] = value;
+                _tupleToId[value] = hashCode;
             }
 
-            public Type LoadType(Integer id)
+            public Integer GetTupleId(Tuple value)
             {
-                return _idToType[id];
+                return _tupleToId[value];
+            }
+
+            public Tuple LoadTuple(Integer id)
+            {
+                return _idToTuple[id];
+            }
+
+            public void RegisterList(List value)
+            {
+                var hashCode = new Integer(value.GetHashCode());
+                _idToList[hashCode] = value;
+                _listToId[value] = hashCode;
+            }
+
+            public Integer GetListId(List value)
+            {
+                return _listToId[value];
+            }
+
+            public List LoadList(Integer id)
+            {
+                return _idToList[id];
             }
         }
     }

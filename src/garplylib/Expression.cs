@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 
-namespace garply
+namespace Garply
 {
     public struct Expression
     {
@@ -48,7 +49,7 @@ namespace garply
             }
         }
 
-        public IFirstClassType Evaluate(IExecutionContext context)
+        public Value Evaluate(IExecutionContext context)
         {
             var arg = context.Pop();
 
@@ -59,73 +60,72 @@ namespace garply
                 switch (instruction.Opcode)
                 {
                     case Opcode.LoadInteger:
+                        context.Push(new Value(instruction.Operand.AsInteger));
+                        break;
                     case Opcode.LoadFloat:
+                        context.Push(new Value(instruction.Operand.AsFloat));
+                        break;
                     case Opcode.LoadBoolean:
+                        context.Push(new Value(instruction.Operand.AsBoolean));
+                        break;
                     case Opcode.LoadString:
+                        context.Push(new Value(instruction.Operand.AsString));
+                        break;
                     case Opcode.LoadType:
-                        {
-                            context.Push((IFirstClassType)instruction.Operand);
-                            break;
-                        }
+                        context.Push(new Value(instruction.Operand.AsType));
+                        break;
                     case Opcode.GetType:
                         {
-                            var value = context.Pop();
-                            var type = value.Type;
-                            context.Push(type);
-                            break;
-                        }
-                    case Opcode.TypeName:
-                        {
-                            var type = (IType)context.Pop();
-                            context.Push(type.Name);
-                            break;
-                        }
-                    case Opcode.TypeBaseType:
-                        {
-                            var type = (IType)context.Pop();
-                            context.Push(type.BaseType);
+                            var type = context.Pop().Type;
+                            context.Push(new Value(TypeValue.Get(type)));
                             break;
                         }
                     case Opcode.TypeIs:
                         {
-                            var otherType = (IType)context.Pop();
-                            var type = (IType)context.Pop();
-                            context.Push(type.Is(otherType));
+                            Value value = context.Pop();
+                            Debug.Assert(value.Type == Types.Type);
+                            var otherType = value.AsType.Type;
+
+                            value = context.Pop();
+                            Debug.Assert(value.Type == Types.Type);
+                            var type = value.AsType.Type;
+                            var typeIsOtherType = (type & otherType) == otherType;
+                            context.Push(new Value(Boolean.Get(typeIsOtherType)));
                             break;
                         }
                     case Opcode.TupleArity:
                         {
-                            var tuple = (Tuple)context.Pop();
+                            var tuple = context.Pop().AsTuple;
                             var arity = tuple.Arity;
-                            context.Push(arity);
+                            context.Push(new Value(arity));
                             break;
                         }
                     case Opcode.TupleItem:
                         {
-                            var tuple = (Tuple)context.Pop();
-                            var index = (Integer)instruction.Operand;
+                            var tuple = context.Pop().AsTuple;
+                            var index = instruction.Operand.AsInteger;
                             var item = tuple.GetItem(index);
                             context.Push(item);
                             break;
                         }
                     case Opcode.NewTuple:
                         {
-                            var arity = (Integer)instruction.Operand;
+                            var arity = instruction.Operand.AsInteger;
                             var tuple = new Tuple(arity, context);
-                            context.Push(tuple);
+                            context.Push(new Value(tuple));
                             break;
                         }
                     case Opcode.ListEmpty:
                         {
                             var list = List.Empty;
-                            context.Push(list);
+                            context.Push(new Value(list));
                             break;
                         }
                     case Opcode.ListAdd:
                         {
                             var item = context.Pop();
-                            var list = (List)context.Pop();
-                            context.Push(list.Add(item));
+                            var list = context.Pop().AsList;
+                            context.Push(new Value(list.Add(item)));
                             break;
                         }
                     case Opcode.PushArg:
@@ -141,13 +141,7 @@ namespace garply
                 }
             }
 
-#if UNSTABLE
-            throw new InvalidOperationException("No Return instruction was encountered");
-#else
-            // TODO: Push an error onto the error stack
-            //context.Push(new Error("No return"))
-            return ErrorValue.Instance;
-#endif
+            throw new InvalidOperationException("FATAL: No return instruction was encountered");
         }
     }
 }

@@ -1,87 +1,72 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 
-namespace garply
+namespace Garply
 {
     [DebuggerDisplay("{DebuggerDisplay,nq}")]
-    public class List : IFirstClassType, IEnumerable
+    public class List : IEnumerable<Value>
     {
-        private List(IType type)
+        private List()
         {
-            Head = EmptyValue.Instance;
+            Head = Value.Error;
             Tail = this;
-            Type = type;
-            Count = new Integer(0);
+            Count = 0;
         }
 
-        private List(IFirstClassType head, List tail)
+        private List(Value head, List tail)
         {
             Head = head;
             Tail = tail;
-            Type = Types.List;
-            Count = new Integer(tail.Count.Value + 1);
+            Count = tail.Count + 1;
         }
 
-        public static List Empty { get; } = new List(Types.Empty);
-        public static List Error { get; } = new List(Types.Error);
+        public static List Empty { get; } = new List();
 
-        public List Add(IFirstClassType item)
+        public List Add(Value item)
         {
+            Debug.Assert(item.Type != Types.Error);
             return new List(item, this);
         }
 
-        public IType Type { get; }
-        public IFirstClassType Head { get; }
+        public Value Head { get; }
         public List Tail { get; }
-        public Integer Count { get; }
+        public int Count { get; }
 
-        IEnumerator IEnumerable.GetEnumerator()
+        public void Write(BinaryWriter writer, IMetadataDatabase metadataDatabase)
         {
-            return new ListEnumerator(this);
+            var id = metadataDatabase.GetListId(this);
+            id.Write(writer, metadataDatabase);
         }
 
-        private class ListEnumerator : IEnumerator
+        IEnumerator<Value> IEnumerable<Value>.GetEnumerator() => new ListEnumerator(this);
+        IEnumerator IEnumerable.GetEnumerator() => new ListEnumerator(this);
+
+        private class ListEnumerator : IEnumerator<Value>
         {
-            private readonly List _seed;
             private List _list;
 
             public ListEnumerator(List list)
             {
-                _seed = list.Add(ErrorValue.Instance);
-                _list = _seed;
+                // The enumerator needs to start out in a before-the-first-item
+                // state, so add an Error value to the front of the list.
+                _list = new List(Value.Error, list);
             }
 
-            public object Current => _list.Head;
+            Value IEnumerator<Value>.Current => _list.Head;
+            object IEnumerator.Current => _list.Head;
+            void IEnumerator.Reset() { }
+            void IDisposable.Dispose() { }
 
-            public bool MoveNext()
+            bool IEnumerator.MoveNext()
             {
                 _list = _list.Tail;
-                return !_list.Type.Equals(Types.Empty);
-            }
-
-            public void Reset()
-            {
-                _list = _seed;
+                return _list.Count > 0;
             }
         }
 
-        internal string DebuggerDisplay
-        {
-            get
-            {
-                if (Type.Equals(Types.Empty))
-                {
-                    return "empty<list>";
-                }
-                else if (Type.Equals(Types.Error))
-                {
-                    return "error<list>";
-                }
-                else
-                {
-                    return $"list({Count.Value})";
-                }
-            }
-        }
+        internal string DebuggerDisplay => $"list({Count})";
     }
 }
