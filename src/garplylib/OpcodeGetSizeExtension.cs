@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace garply
+namespace Garply
 {
     public static class OpcodeGetSizeExtension
     {
@@ -12,24 +12,20 @@ namespace garply
                 case Opcode.PushArg:
                 case Opcode.Return:
                 case Opcode.GetType:
-                case Opcode.TypeName:
-                case Opcode.TypeBaseType:
                 case Opcode.TypeIs:
                 case Opcode.ListEmpty:
                 case Opcode.ListAdd:
-                //case Opcode.TypeName:
-                //case Opcode.TypeBaseType:
-                //case Opcode.TypeIs:
                 //case Opcode.TypeEquals:
                     return 0;
                 case Opcode.LoadBoolean:
                 case Opcode.TupleItem:
                 case Opcode.NewTuple:
                     return 1;
+                case Opcode.LoadType:
+                    return 4;
                 case Opcode.LoadString:
                 case Opcode.LoadInteger:
                 case Opcode.LoadFloat:
-                case Opcode.LoadType:
                     return 8;
                 case Opcode.Reserved1:
                 case Opcode.Reserved2:

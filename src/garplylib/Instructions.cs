@@ -1,4 +1,4 @@
-﻿namespace garply
+﻿namespace Garply
 {
     public static class Instructions
     {
@@ -6,49 +6,38 @@
 
         public static Instruction Nop()
         {
-            return new Instruction(Opcode.Nop, default(EmptyOperand));
+            return new Instruction(Opcode.Nop);
         }
 
         public static Instruction LoadInteger(Integer value)
         {
-            return new Instruction(Opcode.LoadInteger, value);
+            return new Instruction(Opcode.LoadInteger, new Value(value, true));
         }
 
         public static Instruction LoadFloat(Float value)
         {
-            return new Instruction(Opcode.LoadFloat, value);
+            return new Instruction(Opcode.LoadFloat, new Value(value, true));
         }
 
         public static Instruction LoadBoolean(Boolean value)
         {
-            return new Instruction(Opcode.LoadBoolean, value);
+            return new Instruction(Opcode.LoadBoolean, new Value(value, true));
         }
 
         public static Instruction LoadString(Integer id, IMetadataDatabase metadataDatabase)
         {
             var value = metadataDatabase.LoadString(id);
-            return new Instruction(Opcode.LoadString, value);
+            return new Instruction(Opcode.LoadString, new Value(value, true));
         }
 
-        public static Instruction LoadType(Integer id, IMetadataDatabase metadataDatabase)
+        public static Instruction LoadType(Types type)
         {
-            var value = metadataDatabase.LoadType(id);
-            return new Instruction(Opcode.LoadType, value);
+            return new Instruction(Opcode.LoadType, new Value(TypeValue.Get(type), true));
         }
 
         public static new Instruction GetType()
         {
             return new Instruction(Opcode.GetType);
-        }
-
-        public static Instruction TypeName()
-        {
-            return new Instruction(Opcode.TypeName);
-        }
-
-        public static Instruction TypeBaseType()
-        {
-            return new Instruction(Opcode.TypeBaseType);
         }
 
         public static Instruction TypeIs()
@@ -68,12 +57,12 @@
 
         public static Instruction TupleItem(Integer index)
         {
-            return new Instruction(Opcode.TupleItem, index);
+            return new Instruction(Opcode.TupleItem, new Value(index, true));
         }
 
         public static Instruction NewTuple(Integer arity)
         {
-            return new Instruction(Opcode.NewTuple, arity);
+            return new Instruction(Opcode.NewTuple, new Value(arity, true));
         }
 
         public static Instruction ListEmpty()

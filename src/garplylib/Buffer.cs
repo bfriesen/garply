@@ -2,7 +2,7 @@
 using System.Threading;
 using BufferTable=System.Runtime.CompilerServices.ConditionalWeakTable<System.Threading.Thread, byte[]>;
 
-namespace garply
+namespace Garply
 {
     internal static class Buffer
     {

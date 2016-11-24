@@ -1,6 +1,6 @@
 ﻿using System.IO;
 
-namespace garply
+namespace Garply
 {
     public interface IOperand
     {

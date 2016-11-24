@@ -3,72 +3,54 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.IO;
 
-namespace garply
+namespace Garply
 {
     [DebuggerDisplay("{DebuggerDisplay,nq}")]
-    public class Tuple : IFirstClassType, IEnumerable
+    public class Tuple : IEnumerable<Value>
     {
         private readonly Items _items = new Items();
         
-        private Tuple(IType type)
-        {
-            Arity = new Integer(0);
-            Type = type;
-        }
-
         public Tuple(Integer arity, IExecutionContext context)
         {
             for (int i = 0; i < arity.Value; i++)
             {
-                _items.Add(context.Pop());
+                var item = context.Pop();
+                Debug.Assert(item.Type != Types.Error);
+                _items.Add(item);
             }
 #if UNSTABLE
             _items.Lock();
 #endif
             Arity = arity;
-            Type = arity.Value == 0 ? Types.Empty : Types.Tuple;
         }
 
-        public Tuple(IFirstClassType[] items)
+        public Tuple(Value[] items)
         {
-#if UNSTABLE
-            if (items == null) throw new ArgumentNullException("items");
-#endif
+            Debug.Assert(items != null);
             foreach (var item in items)
             {
-#if UNSTABLE
-                if (item == null) throw new ArgumentException("The 'items' parameter must not have any null values.", "items");
-#endif
+                Debug.Assert(item.Type != Types.Error);
                 _items.Add(item);
             }
 #if UNSTABLE
             _items.Lock();
 #endif
             Arity = new Integer(items.Length);
-            Type = items.Length == 0 ? Types.Empty: Types.Tuple;
         }
 
-        public Tuple(IFirstClassType[] items, Name[] names)
-            : this(items, names, null)
+        public Tuple(Value[] items, Name[] names)
         {
-        }
-
-        private Tuple(IFirstClassType[] items, Name[] names, IType type)
-        {
-#if UNSTABLE
-            if (items == null) throw new ArgumentNullException("items");
-            if (names == null) throw new ArgumentNullException("names");
-            if (items.Length != names.Length) throw new ArgumentException("The 'names' parameter must have the same number of values as the 'items' parameter.", "names");
-#endif
+            Debug.Assert(items != null);
+            Debug.Assert(names == null);
+            Debug.Assert(items.Length == names.Length);
             for (int i = 0; i < items.Length; i++)
             {
                 var item = items[i];
                 var name = names[i];
-#if UNSTABLE
-                if (item == null) throw new ArgumentException("The 'items' parameter must not have any null values.", "items");
-                if (name == null) throw new ArgumentException("The 'names' parameter must not have any null values.", "names");
-#endif
+                Debug.Assert(item.Type != Types.Error);
+                Debug.Assert(name != null);
                 _items.SetCurrentName(name);
                 _items.Add(item);
             }
@@ -76,24 +58,17 @@ namespace garply
             _items.Lock();
 #endif
             Arity = new Integer(items.Length);
-            Type = type ?? (items.Length == 0 ? Types.Empty: Types.Tuple);
         }
 
-        public static Tuple Empty { get; } = new Tuple(Types.Empty);
-        public static Tuple Error { get; } = new Tuple(Types.Error);
-
-        public IType Type { get; }
         public Integer Arity { get; }
 
-        public IFirstClassType GetItem(Integer index)
+        public Value GetItem(Integer index)
         {
-#if UNSTABLE
-            if (index.Value >= _items.Count || index.Value > int.MaxValue) throw new ArgumentOutOfRangeException("index");
-#endif
+            Debug.Assert(index.Value < _items.Count && index.Value <= int.MaxValue);
             return _items[(int)index.Value];
         }
 
-        public IFirstClassType GetItem(Name name)
+        public Value GetItem(Name name)
         {
 #if UNSTABLE
             try
@@ -102,14 +77,21 @@ namespace garply
                 return _items[name];
 #if UNSTABLE
             }
-            catch (KeyNotFoundException ex)
+            catch (KeyNotFoundException)
             {
-                throw new ArgumentOutOfRangeException("name", ex);
+                Debug.Fail("Key not found");
+                throw;
             }
 #endif
         }
 
-        private class Items : KeyedCollection<Name, IFirstClassType>
+        public void Write(BinaryWriter writer, IMetadataDatabase metadataDatabase)
+        {
+            var id = metadataDatabase.GetTupleId(this);
+            id.Write(writer, metadataDatabase);
+        }
+
+        private class Items : KeyedCollection<Name, Value>
         {
             private Name _currentName;
 
@@ -118,7 +100,7 @@ namespace garply
                 _currentName = name;
             }
 
-            protected override Name GetKeyForItem(IFirstClassType item)
+            protected override Name GetKeyForItem(Value item)
             {
                 var name = _currentName;
                 _currentName = null;
@@ -133,13 +115,13 @@ namespace garply
                 _isLocked = true;
             }
 
-            protected override void InsertItem(int index, IFirstClassType item)
+            protected override void InsertItem(int index, Value item)
             {
                 if (_isLocked) throw new InvalidOperationException("Cannot insert item in locked Items collection.");
                 base.InsertItem(index, item);
             }
 
-            protected override void SetItem(int index, IFirstClassType item)
+            protected override void SetItem(int index, Value item)
             {
                 if (_isLocked) throw new InvalidOperationException("Cannot set item in locked Items collection.");
                 base.SetItem(index, item);
@@ -159,25 +141,9 @@ namespace garply
 #endif
         }
 
-        internal string DebuggerDisplay
-        {
-            get
-            {
-                if (Type.Equals(Types.Empty))
-                {
-                    return "empty<tuple>";
-                }
-                else if (Type.Equals(Types.Error))
-                {
-                    return "error<tuple>";
-                }
-                else
-                {
-                    return $"tuple({Arity.Value})";
-                }
-            }
-        }
+        internal string DebuggerDisplay => $"tuple({Arity.Value})";
 
+        IEnumerator<Value> IEnumerable<Value>.GetEnumerator() => _items.GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => _items.GetEnumerator();
     }
 }
