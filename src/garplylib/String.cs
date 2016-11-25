@@ -16,10 +16,10 @@ namespace Garply
 
         public string Value { get; }
 
-        public void Write(BinaryWriter writer, IMetadataDatabase metadataDatabase)
+        public void Write(Opcode opcode, BinaryWriter writer, IMetadataDatabase metadataDatabase)
         {
             var id = metadataDatabase.GetStringId(this);
-            id.Write(writer, metadataDatabase);
+            id.Write(opcode, writer, metadataDatabase);
         }
 
         public override bool Equals(object obj)

@@ -41,7 +41,7 @@ namespace Garply
 
         public Types Type { get; }
 
-        public void Write(BinaryWriter writer, IMetadataDatabase metadataDatabase)
+        public void Write(Opcode opcode, BinaryWriter writer, IMetadataDatabase metadataDatabase)
         {
             Debug.Assert(Type != Types.Error);
             writer.Write((uint)Type);

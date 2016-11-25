@@ -97,7 +97,7 @@ namespace Garply
                     operand = new Value(new Integer(arity), true);
                     break;
                 case Opcode.TupleItem:
-                    var index = BitConverter.ToInt64(operandData, 0);
+                    var index = operandData[0];
                     operand = new Value(new Integer(index), true);
                     break;
                 default:
@@ -119,7 +119,7 @@ namespace Garply
                 writer.Write((byte)((ushort)Opcode & 0xFF));
             }
 
-            Operand.Write(writer, metadataDatabase);
+            Operand.Write(Opcode, writer, metadataDatabase);
         }
 
         internal string DebuggerDisplay
@@ -130,7 +130,7 @@ namespace Garply
                 switch (Operand.Type & ~Types.Operand)
                 {
                     case Types.Boolean: operand = Operand.AsBoolean.DebuggerDisplay; break;
-                    case Types.Error: operand = "error"; break;
+                    case Types.Error: return Opcode.ToString();
                     case Types.Float: operand = Operand.AsFloat.DebuggerDisplay; break;
                     case Types.Integer: operand = Operand.AsInteger.DebuggerDisplay; break;
                     case Types.List: operand = Operand.AsList.DebuggerDisplay; break;
