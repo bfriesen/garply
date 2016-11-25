@@ -13,9 +13,23 @@ namespace Garply
 
         public long Value { get; }
 
-        public void Write(BinaryWriter writer, IMetadataDatabase metadataDatabase)
+        public void Write(Opcode opcode, BinaryWriter writer, IMetadataDatabase metadataDatabase)
         {
-            writer.Write(Value);
+            switch (opcode)
+            {
+                case Opcode.NewTuple:
+                case Opcode.TupleItem:
+                    writer.Write((byte)Value);
+                    break;
+                case Opcode.LoadType:
+                //case Opcode.LoadList:
+                case Opcode.LoadString:
+                    writer.Write((uint)Value);
+                    break;
+                default:
+                    writer.Write(Value);
+                    break;
+            }
         }
 
         public override bool Equals(object obj)

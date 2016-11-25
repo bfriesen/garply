@@ -21,7 +21,7 @@ namespace Garply
 
         public bool Value { get; }
 
-        public void Write(BinaryWriter writer, IMetadataDatabase metadataDatabase)
+        public void Write(Opcode opcode, BinaryWriter writer, IMetadataDatabase metadataDatabase)
         {
             writer.Write(Value);
         }

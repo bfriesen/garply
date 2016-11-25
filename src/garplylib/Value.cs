@@ -20,7 +20,7 @@ namespace Garply
         public static Value Error { get; } = new Value(false);
         public static Value EmptyOperand { get; } = new Value(true);
 
-        public void Write(BinaryWriter writer, IMetadataDatabase metadataDatabase)
+        public void Write(Opcode opcode, BinaryWriter writer, IMetadataDatabase metadataDatabase)
         {
             Debug.Assert((Type & Types.Operand) == Types.Operand);
             switch (Type & ~Types.Operand)
@@ -32,7 +32,7 @@ namespace Garply
                 case Types.List:
                 case Types.String:
                 case Types.Tuple:
-                case Types.Type: ((IOperand)Raw).Write(writer, metadataDatabase); break;
+                case Types.Type: ((IOperand)Raw).Write(opcode, writer, metadataDatabase); break;
                 default: Debug.Fail($"Unknown/unwritable type: {Type}"); break;
             }
         }

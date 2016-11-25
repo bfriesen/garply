@@ -35,10 +35,10 @@ namespace Garply
         public List Tail { get; }
         public int Count { get; }
 
-        public void Write(BinaryWriter writer, IMetadataDatabase metadataDatabase)
+        public void Write(Opcode opcode, BinaryWriter writer, IMetadataDatabase metadataDatabase)
         {
             var id = metadataDatabase.GetListId(this);
-            id.Write(writer, metadataDatabase);
+            id.Write(opcode, writer, metadataDatabase);
         }
 
         IEnumerator<Value> IEnumerable<Value>.GetEnumerator() => new ListEnumerator(this);

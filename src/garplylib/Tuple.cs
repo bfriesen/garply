@@ -41,10 +41,10 @@ namespace Garply
             return _items[(int)index.Value];
         }
 
-        public void Write(BinaryWriter writer, IMetadataDatabase metadataDatabase)
+        public void Write(Opcode opcode, BinaryWriter writer, IMetadataDatabase metadataDatabase)
         {
             var id = metadataDatabase.GetTupleId(this);
-            id.Write(writer, metadataDatabase);
+            id.Write(opcode, writer, metadataDatabase);
         }
 
         internal string DebuggerDisplay => $"tuple({Arity.Value})";

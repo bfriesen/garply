@@ -31,10 +31,10 @@ namespace Garply
             var l = new Value(List.Empty.Add(f).Add(b1).Add(b2).Add(s));
             var t = new Value(new Tuple(new Value[] { f, b1, b2, s, l }));
 
-            foreach (var item in l.AsList)
-            {
+            //foreach (var item in l.AsList)
+            //{
 
-            }
+            //}
 
             // match x on
             // integer i : i > 0 -> ...
@@ -70,14 +70,15 @@ namespace Garply
                 //.Add(Instructions.LoadInteger(new Integer(123)))
                 //.Add(Instructions.ListAdd())
                 .Add(Instructions.PushArg())
-                .Add(Instructions.GetType())
-                .Add(Instructions.LoadType(Types.Value))
-                .Add(Instructions.TypeIs())
+                .Add(Instructions.TupleItem(new Integer(0)))
+                //.Add(Instructions.GetType())
+                //.Add(Instructions.LoadType(Types.Value))
+                //.Add(Instructions.TypeIs())
                 .Add(Instructions.Return())
                 .Build();
 
             var context = new ExecutionContext();
-            context.Push(f);
+            context.Push(t);
 
             var x = expression.Evaluate(context);
 
@@ -88,7 +89,7 @@ namespace Garply
             stream.Position = 0;
             var expression2 = Expression.Read(stream, metadataDatabase);
             context = new ExecutionContext();
-            context.Push(f);
+            context.Push(t);
             var x2 = expression2.Evaluate(context);
         }
 
