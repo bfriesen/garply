@@ -5,11 +5,11 @@
         Nop,
         GetType,
         TypeIs,
-        //TypeEquals,   // TODO
+        TypeEquals,
         TupleArity,
         TupleItem,
-        //ListHead,     // TODO
-        //ListTail,     // TODO
+        ListHead,
+        ListTail,
         NewTuple,
         ListEmpty,
         ListAdd,

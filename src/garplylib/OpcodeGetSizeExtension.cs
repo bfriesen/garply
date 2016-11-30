@@ -13,9 +13,12 @@ namespace Garply
                 case Opcode.Return:
                 case Opcode.GetType:
                 case Opcode.TypeIs:
+                case Opcode.TypeEquals:
                 case Opcode.ListEmpty:
                 case Opcode.ListAdd:
-                //case Opcode.TypeEquals:
+                case Opcode.ListHead:
+                case Opcode.ListTail:
+                case Opcode.TupleArity:
                     return 0;
                 case Opcode.LoadBoolean:
                 case Opcode.TupleItem:

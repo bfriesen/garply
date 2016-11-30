@@ -52,6 +52,7 @@ namespace Garply
         public Value Evaluate(IExecutionContext context)
         {
             var arg = context.Pop();
+            Heap.IncrementRefCount(arg);
 
             for (int i = 0; i < _instructions.Length; i++)
             {
@@ -60,72 +61,102 @@ namespace Garply
                 switch (instruction.Opcode)
                 {
                     case Opcode.LoadInteger:
-                        context.Push(new Value(instruction.Operand.AsInteger));
-                        break;
                     case Opcode.LoadFloat:
-                        context.Push(new Value(instruction.Operand.AsFloat));
-                        break;
                     case Opcode.LoadBoolean:
-                        context.Push(new Value(instruction.Operand.AsBoolean));
-                        break;
                     case Opcode.LoadString:
-                        context.Push(new Value(instruction.Operand.AsString));
+                        context.Push(instruction.Operand);
                         break;
                     case Opcode.LoadType:
-                        context.Push(new Value(instruction.Operand.AsType));
-                        break;
+                        {
+                            var type = (Types)(uint)instruction.Operand.Raw;
+                            context.Push(new Value(type));
+                            break;
+                        }
                     case Opcode.GetType:
                         {
                             var type = context.Pop().Type;
-                            context.Push(new Value(TypeValue.Get(type)));
+                            context.Push(new Value(type));
                             break;
                         }
                     case Opcode.TypeIs:
                         {
-                            Value value = context.Pop();
+                            var value = context.Pop();
                             Debug.Assert(value.Type == Types.Type);
-                            var otherType = value.AsType.Type;
+                            var rhsType = (Types)(uint)value.Raw;
 
                             value = context.Pop();
                             Debug.Assert(value.Type == Types.Type);
-                            var type = value.AsType.Type;
-                            var typeIsOtherType = (type & otherType) == otherType;
-                            context.Push(new Value(Boolean.Get(typeIsOtherType)));
+                            var lhsType = (Types)(uint)value.Raw;
+
+                            var lhsTypeIsRhsType = (lhsType & rhsType) != 0 && lhsType >= rhsType;
+                            context.Push(new Value(lhsTypeIsRhsType));
+                            break;
+                        }
+                    case Opcode.TypeEquals:
+                        {
+                            var value = context.Pop();
+                            Debug.Assert(value.Type == Types.Type);
+                            var rhsType = (Types)(uint)value.Raw;
+
+                            value = context.Pop();
+                            Debug.Assert(value.Type == Types.Type);
+                            var lhsType = (Types)(uint)value.Raw;
+
+                            var lhsTypeEqualsRhsType = lhsType == rhsType;
+                            context.Push(new Value(lhsTypeEqualsRhsType));
                             break;
                         }
                     case Opcode.TupleArity:
                         {
-                            var tuple = context.Pop().AsTuple;
-                            var arity = tuple.Arity;
+                            var tuple = Heap.GetTuple((int)context.Pop().Raw);
+                            var arity = tuple.Items.Count;
                             context.Push(new Value(arity));
                             break;
                         }
                     case Opcode.TupleItem:
                         {
-                            var tuple = context.Pop().AsTuple;
-                            var index = instruction.Operand.AsInteger;
-                            var item = tuple.GetItem(index);
+                            var tupleValue = context.Pop();
+                            var tuple = Heap.GetTuple((int)tupleValue.Raw);
+                            var index = (int)instruction.Operand.Raw;
+                            var item = tuple.Items[index];
                             context.Push(item);
                             break;
                         }
                     case Opcode.NewTuple:
                         {
-                            var arity = instruction.Operand.AsInteger;
-                            var tuple = new Tuple(arity, context);
-                            context.Push(new Value(tuple));
+                            var arity = (int)instruction.Operand.Raw;
+                            var tuple = Heap.AllocateTuple(arity, context);
+                            context.Push(tuple);
                             break;
                         }
                     case Opcode.ListEmpty:
                         {
-                            var list = List.Empty;
-                            context.Push(new Value(list));
+                            var list = Empty.List;
+                            context.Push(list);
                             break;
                         }
                     case Opcode.ListAdd:
                         {
-                            var item = context.Pop();
-                            var list = context.Pop().AsList;
-                            context.Push(new Value(list.Add(item)));
+                            var head = context.Pop();
+                            var tail = context.Pop();
+                            var list = Heap.AllocateList(head, tail);
+                            context.Push(list);
+                            break;
+                        }
+                    case Opcode.ListHead:
+                        {
+                            var listValue = context.Pop();
+                            var list = Heap.GetList((int)listValue.Raw);
+                            var head = list.Head;
+                            context.Push(head);
+                            break;
+                        }
+                    case Opcode.ListTail:
+                        {
+                            var listValue = context.Pop();
+                            var list = Heap.GetList((int)listValue.Raw);
+                            var tail = new Value(Types.List, list.TailIndex);
+                            context.Push(tail);
                             break;
                         }
                     case Opcode.PushArg:
@@ -136,6 +167,8 @@ namespace Garply
                     case Opcode.Return:
                         {
                             var returnValue = context.Pop();
+                            Heap.IncrementRefCount(returnValue);
+                            Heap.DecrementRefCount(arg);
                             return returnValue;
                         }
                 }

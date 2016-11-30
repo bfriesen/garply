@@ -16,7 +16,7 @@ namespace Garply
         public Instruction(Opcode opcode)
         {
             Opcode = opcode;
-            Operand = Value.EmptyOperand;
+            Operand = default(Value);
         }
 
         public Instruction(Opcode opcode, Value operand)
@@ -65,40 +65,45 @@ namespace Garply
                 case Opcode.Return:
                 case Opcode.GetType:
                 case Opcode.TypeIs:
+                case Opcode.TypeEquals:
                 case Opcode.TupleArity:
                 case Opcode.ListEmpty:
                 case Opcode.ListAdd:
-                //case Opcode.TypeEquals:
-                    operand = Value.EmptyOperand;
+                case Opcode.ListHead:
+                case Opcode.ListTail:
+                    operand = default(Value);
                     break;
                 case Opcode.LoadBoolean:
                     var booleanValue = BitConverter.ToBoolean(operandData, 0);
-                    operand = new Value(Boolean.Get(booleanValue), true);
+                    operand = new Value(booleanValue);
                     break;
                 case Opcode.LoadString:
-                    var stringId = new Integer(BitConverter.ToInt64(operandData, 0));
-                    operand = new Value(metadataDatabase.LoadString(stringId), true);
+                    var stringId = BitConverter.ToInt64(operandData, 0);
+                    operand = metadataDatabase.LoadString(stringId);
                     break;
                 case Opcode.LoadInteger:
                     var integerValue = BitConverter.ToInt64(operandData, 0);
-                    operand = new Value(new Integer(integerValue), true);
+                    operand = new Value(integerValue);
                     break;
                 case Opcode.LoadFloat:
                     var floatValue = BitConverter.ToDouble(operandData, 0);
-                    operand = new Value(new Float(floatValue), true);
+                    operand = new Value(floatValue);
                     break;
                 case Opcode.LoadType:
                     var type = (Types)BitConverter.ToUInt32(operandData, 0);
-                    operand = new Value(TypeValue.Get(type), true);
-                    Debug.Assert(operand.Type != Types.Error);
+                    operand = new Value(type);
                     break;
+                //    var type = (Types)BitConverter.ToUInt32(operandData, 0);
+                //    operand = new Value(TypeValue.Get(type), true);
+                //    Debug.Assert(operand.Type != Types.Error);
+                //    break;
                 case Opcode.NewTuple:
                     var arity = operandData[0];
-                    operand = new Value(new Integer(arity), true);
+                    operand = new Value(arity);
                     break;
                 case Opcode.TupleItem:
                     var index = operandData[0];
-                    operand = new Value(new Integer(index), true);
+                    operand = new Value(index);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException("opcode");
@@ -122,25 +127,6 @@ namespace Garply
             Operand.Write(Opcode, writer, metadataDatabase);
         }
 
-        internal string DebuggerDisplay
-        {
-            get
-            {
-                string operand;
-                switch (Operand.Type & ~Types.Operand)
-                {
-                    case Types.Boolean: operand = Operand.AsBoolean.DebuggerDisplay; break;
-                    case Types.Error: return Opcode.ToString();
-                    case Types.Float: operand = Operand.AsFloat.DebuggerDisplay; break;
-                    case Types.Integer: operand = Operand.AsInteger.DebuggerDisplay; break;
-                    case Types.List: operand = Operand.AsList.DebuggerDisplay; break;
-                    case Types.String: operand = Operand.AsString.DebuggerDisplay; break;
-                    case Types.Tuple: operand = Operand.AsTuple.DebuggerDisplay; break;
-                    case Types.Type: operand = Operand.AsType.DebuggerDisplay; break;
-                    default: return "Unknown Operand encountered in Instruction.DebuggerDisplay";
-                }
-                return $"{Opcode}:{operand}";
-            }
-        }
+        internal string DebuggerDisplay => $"{Opcode}:{Operand.DebuggerDisplay}";
     }
 }

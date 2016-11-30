@@ -9,30 +9,30 @@
             return new Instruction(Opcode.Nop);
         }
 
-        public static Instruction LoadInteger(Integer value)
+        public static Instruction LoadInteger(long value)
         {
-            return new Instruction(Opcode.LoadInteger, new Value(value, true));
+            return new Instruction(Opcode.LoadInteger, new Value(value));
         }
 
-        public static Instruction LoadFloat(Float value)
+        public static Instruction LoadFloat(double value)
         {
-            return new Instruction(Opcode.LoadFloat, new Value(value, true));
+            return new Instruction(Opcode.LoadFloat, new Value(value));
         }
 
-        public static Instruction LoadBoolean(Boolean value)
+        public static Instruction LoadBoolean(bool value)
         {
-            return new Instruction(Opcode.LoadBoolean, new Value(value, true));
+            return new Instruction(Opcode.LoadBoolean, new Value(value));
         }
 
-        public static Instruction LoadString(Integer id, IMetadataDatabase metadataDatabase)
+        public static Instruction LoadString(long id, IMetadataDatabase metadataDatabase)
         {
             var value = metadataDatabase.LoadString(id);
-            return new Instruction(Opcode.LoadString, new Value(value, true));
+            return new Instruction(Opcode.LoadString, value);
         }
 
         public static Instruction LoadType(Types type)
         {
-            return new Instruction(Opcode.LoadType, new Value(TypeValue.Get(type), true));
+            return new Instruction(Opcode.LoadType, new Value(type));
         }
 
         public static new Instruction GetType()
@@ -45,24 +45,24 @@
             return new Instruction(Opcode.TypeIs);
         }
 
-        //public static Instruction TypeEquals()
-        //{
-        //    return new Instruction(Opcode.TypeEquals);
-        //}
+        public static Instruction TypeEquals()
+        {
+            return new Instruction(Opcode.TypeEquals);
+        }
 
         public static Instruction TupleArity()
         {
             return new Instruction(Opcode.TupleArity);
         }
 
-        public static Instruction TupleItem(Integer index)
+        public static Instruction TupleItem(int index)
         {
-            return new Instruction(Opcode.TupleItem, new Value(index, true));
+            return new Instruction(Opcode.TupleItem, new Value(index));
         }
 
-        public static Instruction NewTuple(Integer arity)
+        public static Instruction NewTuple(int arity)
         {
-            return new Instruction(Opcode.NewTuple, new Value(arity, true));
+            return new Instruction(Opcode.NewTuple, new Value(arity));
         }
 
         public static Instruction ListEmpty()
@@ -73,6 +73,16 @@
         public static Instruction ListAdd()
         {
             return new Instruction(Opcode.ListAdd);
+        }
+
+        public static Instruction ListHead()
+        {
+            return new Instruction(Opcode.ListHead);
+        }
+
+        public static Instruction ListTail()
+        {
+            return new Instruction(Opcode.ListTail);
         }
 
         public static Instruction PushArg()

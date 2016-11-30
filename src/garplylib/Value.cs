@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.IO;
 
 namespace Garply
@@ -6,163 +7,88 @@ namespace Garply
     [DebuggerDisplay("{DebuggerDisplay,nq}")]
     public struct Value
     {
+        private const byte _true = 1;
+        private const byte _false = 0;
+
+        public readonly long Raw;
         public readonly Types Type;
-        public readonly object Raw;
 
-        public Boolean AsBoolean => (Boolean)Raw;
-        public Float AsFloat => (Float)Raw;
-        public Integer AsInteger => (Integer)Raw;
-        public List AsList => (List)Raw;
-        public String AsString => (String)Raw;
-        public Tuple AsTuple => (Tuple)Raw;
-        public TypeValue AsType => (TypeValue)Raw;
+        internal Value(Types type, long rawValue)
+        {
+            Type = type;
+            Raw = rawValue;
+        }
 
-        public static Value Error { get; } = new Value(false);
-        public static Value EmptyOperand { get; } = new Value(true);
+        public Value(bool value)
+        {
+            Type = Types.Boolean;
+            Raw = value ? 1 : 0;
+        }
+
+        public Value(long value)
+        {
+            Type = Types.Integer;
+            Raw = value;
+        }
+
+        public Value(double value)
+        {
+            Type = Types.Float;
+            Raw = BitConverter.DoubleToInt64Bits(value);
+        }
+
+        public Value(Types value)
+        {
+            Type = Types.Type;
+            Raw = (uint)value;
+        }
 
         public void Write(Opcode opcode, BinaryWriter writer, IMetadataDatabase metadataDatabase)
         {
-            Debug.Assert((Type & Types.Operand) == Types.Operand);
-            switch (Type & ~Types.Operand)
+            switch (Type)
             {
                 case Types.Error: break;
-                case Types.Boolean:
-                case Types.Float:
+                case Types.Boolean: writer.Write(Raw == 0 ? _false : _true); break;
+                case Types.Float: writer.Write(BitConverter.Int64BitsToDouble(Raw)); break;
                 case Types.Integer:
-                case Types.List:
-                case Types.String:
-                case Types.Tuple:
-                case Types.Type: ((IOperand)Raw).Write(opcode, writer, metadataDatabase); break;
+                    {
+                        switch (opcode)
+                        {
+                            case Opcode.TupleItem:
+                                writer.Write((byte)Raw);
+                                break;
+                            default:
+                                writer.Write(Raw);
+                                break;
+                        }
+                        break;
+                    }
+                case Types.List: writer.Write(Raw); break;
+                case Types.String: writer.Write(metadataDatabase.GetStringId(Heap.GetString((int)Raw))); break;
+                case Types.Tuple: writer.Write(Raw); break;
+                case Types.Type: writer.Write((uint)Raw); break;
                 default: Debug.Fail($"Unknown/unwritable type: {Type}"); break;
             }
         }
-
-        #region Numerous constructors
-
-        private Value(bool isEmptyOperand)
-        {
-            Type = isEmptyOperand ? Types.Operand : default(Types);
-            Raw = null;
-        }
-
-        public Value(Boolean boolean)
-        {
-            Debug.Assert(boolean != null);
-            Type = Types.Boolean;
-            Raw = boolean;
-        }
-
-        public Value(Boolean boolean, bool isOperand)
-        {
-            Debug.Assert(boolean != null);
-            Type = Types.Boolean | (isOperand ? Types.Operand : 0);
-            Raw = boolean;
-        }
-
-        public Value(Float @float)
-        {
-            Debug.Assert(@float != null);
-            Type = Types.Float;
-            Raw = @float;
-        }
-
-        public Value(Float @float, bool isOperand)
-        {
-            Debug.Assert(@float != null);
-            Type = Types.Float | (isOperand ? Types.Operand : 0);
-            Raw = @float;
-        }
-
-        public Value(Integer integer)
-        {
-            Debug.Assert(integer != null);
-            Type = Types.Integer;
-            Raw = integer;
-        }
-
-        public Value(Integer integer, bool isOperand)
-        {
-            Debug.Assert(integer != null);
-            Type = Types.Integer | (isOperand ? Types.Operand : 0);
-            Raw = integer;
-        }
-
-        public Value(List list)
-        {
-            Debug.Assert(list != null);
-            Type = Types.List;
-            Raw = list;
-        }
-
-        public Value(List list, bool isOperand)
-        {
-            Debug.Assert(list != null);
-            Type = Types.List | (isOperand ? Types.Operand : 0);
-            Raw = list;
-        }
-
-        public Value(String @string)
-        {
-            Debug.Assert(@string != null);
-            Type = Types.String;
-            Raw = @string;
-        }
-
-        public Value(String @string, bool isOperand)
-        {
-            Debug.Assert(@string != null);
-            Type = Types.String | (isOperand ? Types.Operand : 0);
-            Raw = @string;
-        }
-
-        public Value(Tuple tuple)
-        {
-            Debug.Assert(tuple != null);
-            Type = Types.Tuple;
-            Raw = tuple;
-        }
-
-        public Value(Tuple tuple, bool isOperand)
-        {
-            Debug.Assert(tuple != null);
-            Type = Types.Tuple | (isOperand ? Types.Operand : 0);
-            Raw = tuple;
-        }
-
-        public Value(TypeValue typeValue)
-        {
-            Debug.Assert(typeValue != null);
-            Type = Types.Type;
-            Raw = typeValue;
-        }
-
-        public Value(TypeValue typeValue, bool isOperand)
-        {
-            Debug.Assert(typeValue != null);
-            Type = Types.Type | (isOperand ? Types.Operand : 0);
-            Raw = typeValue;
-        }
-
-        #endregion
 
         internal string DebuggerDisplay
         {
             get
             {
+                if (Type == Types.Error) return "<Empty>";
                 string valueString;
-                switch (Type & ~Types.Operand)
+                switch (Type)
                 {
-                    case Types.Boolean: valueString = AsBoolean.DebuggerDisplay; break;
-                    case Types.Error: return "error";
-                    case Types.Float: valueString = AsFloat.DebuggerDisplay; break;
-                    case Types.Integer: valueString = AsInteger.DebuggerDisplay; break;
-                    case Types.List: valueString = AsList.DebuggerDisplay; break;
-                    case Types.String: valueString = AsString.DebuggerDisplay; break;
-                    case Types.Tuple: valueString = AsTuple.DebuggerDisplay; break;
-                    case Types.Type: valueString = AsType.DebuggerDisplay; break;
+                    case Types.Boolean: valueString = (Raw != 0).ToString(); break;
+                    case Types.Float: valueString = BitConverter.Int64BitsToDouble(Raw).ToString(); break;
+                    case Types.Integer: valueString = Raw.ToString(); break;
+                    case Types.String: valueString = Heap.GetString((int)Raw); break;
+                    case Types.Tuple: valueString = Heap.GetTuple((int)Raw).DebuggerDisplay; break;
+                    case Types.List: valueString = Heap.GetList((int)Raw).DebuggerDisplay; break;
+                    case Types.Type: valueString = ((Types)(uint)Raw).ToString(); break;
                     default: return $"Unknown Type: {Type}";
                 }
-                return $"{Type}:{valueString}";
+                return $"({Type}) {valueString}";
             }
         }
     }
