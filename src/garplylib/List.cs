@@ -13,6 +13,8 @@ namespace Garply
             TailIndex = tailIndex;
         }
 
+        public bool IsEmpty => Head.Type == Types.Error;
+
         public override string ToString()
         {
             var sb = new StringBuilder();
