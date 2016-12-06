@@ -83,8 +83,10 @@ namespace Garply
                     case Opcode.LoadString:
                         {
                             Debug.Assert(instruction.Operand.Type == Types.String);
-                            context.Push(instruction.Operand);
-                            instruction.Operand.AddRef();
+                            var rawValue = StringDatabase.GetRawValue(instruction.Operand.Raw);
+                            var value = Heap.AllocateString(rawValue);
+                            context.Push(value);
+                            value.AddRef();
                             break;
                         }
                     case Opcode.GetType:

@@ -170,12 +170,16 @@ namespace Garply
                     .Or(Parse.CharExcept('"'))
                     .Many().Text()
                 from closeQuote in Parse.Char('"')
-                select Heap.AllocateExpression(Types.String, new Instruction[]
-                {
-                    new Instruction(Opcode.LoadString, Heap.AllocateString(value))
-                });
+                select Heap.AllocateExpression(Types.String,
+                    GetStringLiteralRetreivalInstructions(value));
 
             return stringParser;
+        }
+
+        private Instruction[] GetStringLiteralRetreivalInstructions(string value)
+        {
+            var stringValue = StringDatabase.Register(value);
+            return new[] { new Instruction(Opcode.LoadString, stringValue) };
         }
 
         private Parser<Value> GetTupleLiteralParser()
