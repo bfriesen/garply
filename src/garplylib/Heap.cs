@@ -22,53 +22,40 @@ namespace Garply
             public readonly Queue<int> _availableListIndexes = new Queue<int>();
             public readonly Queue<int> _availableTupleIndexes = new Queue<int>();
             public readonly Queue<int> _availableExpressionIndexes = new Queue<int>();
+
+            public readonly Dictionary<long, int> _stringIndexLookup = new Dictionary<long, int>();
         }
 
         private static readonly ThreadLocal<HeapInstance> _instance = new ThreadLocal<HeapInstance>(() => new HeapInstance());
 
-        public static string StringDump =>
-            $@"string values: [{string.Join(", ", _instance.Value._strings)}]
-string refs: [{string.Join(", ", _instance.Value._stringReferenceCounts)}]
-available string indexes: [{string.Join(", ", _instance.Value._availableStringIndexes)}]";
-
-        public static string ListDump =>
-            $@"list values: [{string.Join(", ", _instance.Value._lists)}]
-list refs: [{string.Join(", ", _instance.Value._listReferenceCounts)}]
-available list indexes: [{string.Join(", ", _instance.Value._availableListIndexes)}]";
-
-        public static string TupleDump =>
-            $@"tuple values: [{string.Join(", ", _instance.Value._tuples)}]
-tuple refs: [{string.Join(", ", _instance.Value._tupleReferenceCounts)}]
-available tuple indexes: [{string.Join(", ", _instance.Value._availableTupleIndexes)}]";
-
-        public static string ExpressionDump(IExecutionContext context) =>
-            $@"expression values: [{string.Join(", ", _instance.Value._expressions.Select(x => x.Evaluate(context)))}]
-expression refs: [{string.Join(", ", _instance.Value._expressionReferenceCounts)}]
-available expression indexes: [{string.Join(", ", _instance.Value._availableExpressionIndexes)}]";
-
-        public static string RefCountDump =>
-            $@"string refs: [{string.Join(", ", _instance.Value._stringReferenceCounts)}]
-list refs: [{string.Join(", ", _instance.Value._listReferenceCounts)}]
-tuple refs: [{string.Join(", ", _instance.Value._tupleReferenceCounts)}]
-expression refs: [{string.Join(", ", _instance.Value._expressionReferenceCounts)}]";
-
         public static Value AllocateString(string rawValue)
         {
             var instance = _instance.Value;
+
             int stringId;
-            if (instance._availableStringIndexes.Count > 0)
+            var databaseId = rawValue.GetLongHashCode();
+
+            if (instance._stringIndexLookup.ContainsKey(databaseId))
             {
-                stringId = instance._availableStringIndexes.Dequeue();
-                instance._strings[stringId] = rawValue;
+                stringId = instance._stringIndexLookup[databaseId];
             }
             else
             {
-                stringId = instance._strings.Count;
-                instance._strings.Add(rawValue);
-                instance._stringReferenceCounts.Add(0);
+                if (instance._availableStringIndexes.Count > 0)
+                {
+                    stringId = instance._availableStringIndexes.Dequeue();
+                    instance._strings[stringId] = rawValue;
+                }
+                else
+                {
+                    stringId = instance._strings.Count;
+                    instance._strings.Add(rawValue);
+                    instance._stringReferenceCounts.Add(0);
+                }
+                instance._stringIndexLookup.Add(databaseId, stringId);
             }
+            
             var value = new Value(Types.String, stringId);
-            IncrementStringRefCount(value);
             return value;
         }
 
@@ -259,6 +246,7 @@ expression refs: [{string.Join(", ", _instance.Value._expressionReferenceCounts)
             instance._stringReferenceCounts[stringIndex]--;
             if (instance._stringReferenceCounts[stringIndex] == 0)
             {
+                instance._stringIndexLookup.Remove(instance._strings[stringIndex].GetLongHashCode());
                 instance._strings[stringIndex] = null;
                 instance._availableStringIndexes.Enqueue(stringIndex);
             }
@@ -320,5 +308,31 @@ expression refs: [{string.Join(", ", _instance.Value._expressionReferenceCounts)
                 instance._availableExpressionIndexes.Enqueue(expressionIndex);
             }
         }
+
+        public static string StringDump =>
+            $@"string values: [{string.Join(", ", _instance.Value._strings)}]
+string refs: [{string.Join(", ", _instance.Value._stringReferenceCounts)}]
+available string indexes: [{string.Join(", ", _instance.Value._availableStringIndexes)}]";
+
+        public static string ListDump =>
+            $@"list values: [{string.Join(", ", _instance.Value._lists)}]
+list refs: [{string.Join(", ", _instance.Value._listReferenceCounts)}]
+available list indexes: [{string.Join(", ", _instance.Value._availableListIndexes)}]";
+
+        public static string TupleDump =>
+            $@"tuple values: [{string.Join(", ", _instance.Value._tuples)}]
+tuple refs: [{string.Join(", ", _instance.Value._tupleReferenceCounts)}]
+available tuple indexes: [{string.Join(", ", _instance.Value._availableTupleIndexes)}]";
+
+        public static string ExpressionDump(IExecutionContext context) =>
+            $@"expression values: [{string.Join(", ", _instance.Value._expressions.Select(x => x.Evaluate(context)))}]
+expression refs: [{string.Join(", ", _instance.Value._expressionReferenceCounts)}]
+available expression indexes: [{string.Join(", ", _instance.Value._availableExpressionIndexes)}]";
+
+        public static string RefCountDump =>
+            $@"string refs: [{string.Join(", ", _instance.Value._stringReferenceCounts)}]
+list refs: [{string.Join(", ", _instance.Value._listReferenceCounts)}]
+tuple refs: [{string.Join(", ", _instance.Value._tupleReferenceCounts)}]
+expression refs: [{string.Join(", ", _instance.Value._expressionReferenceCounts)}]";
     }
 }

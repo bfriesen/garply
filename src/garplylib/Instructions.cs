@@ -29,7 +29,7 @@
             return new Instruction(Opcode.LoadType, new Value(type));
         }
 
-        public static Instruction LoadString(int id)
+        public static Instruction LoadString(long id)
         {
             return new Instruction(Opcode.LoadString, new Value(Types.String, id));
         }
