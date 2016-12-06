@@ -5,7 +5,14 @@ namespace Garply
 {
     public class ExpressionBuilder : IEnumerable
     {
+        public Types Type { get; set; }
         public List<Instruction> Instructions { get; } = new List<Instruction>();
+
+        public ExpressionBuilder SetType(Types type)
+        {
+            Type = type;
+            return this;
+        }
 
         public ExpressionBuilder Add(Instruction instruction)
         {
@@ -15,7 +22,7 @@ namespace Garply
 
         public Expression Build()
         {
-            return new Expression(Instructions.ToArray());
+            return new Expression(Type, Instructions.ToArray());
         }
 
         IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)Instructions).GetEnumerator();

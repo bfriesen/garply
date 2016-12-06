@@ -9,8 +9,6 @@ namespace Garply
             switch (opcode)
             {
                 case Opcode.Nop:
-                case Opcode.PushArg:
-                case Opcode.Return:
                 case Opcode.GetType:
                 case Opcode.TypeIs:
                 case Opcode.TypeEquals:
@@ -25,8 +23,8 @@ namespace Garply
                 case Opcode.NewTuple:
                     return 1;
                 case Opcode.LoadType:
-                    return 4;
                 case Opcode.LoadString:
+                    return 4;
                 case Opcode.LoadInteger:
                 case Opcode.LoadFloat:
                     return 8;
