@@ -1,30 +1,8 @@
-﻿using System;
-
-namespace Garply
+﻿namespace Garply
 {
     public static class Empty
     {
-        private static readonly Lazy<Value> _emptyList;
-        private static readonly Lazy<Value> _emptyTuple;
-
-        static Empty()
-        {
-            _emptyList = new Lazy<Value>(() =>
-            {
-                var list = Heap.AllocateList(default(Value), default(Value));
-                Heap.IncrementListRefCount(list);
-                return list;
-            });
-
-            _emptyTuple = new Lazy<Value>(() =>
-            {
-                var tuple = Heap.AllocateTuple();
-                Heap.IncrementTupleRefCount(tuple);
-                return tuple;
-            });
-        }
-
-        public static Value List => _emptyList.Value;
-        public static Value Tuple => _emptyTuple.Value;
+        public static Value List { get; } = new Value(Types.List, 0);
+        public static Value Tuple { get; } = new Value(Types.Tuple, 0);
     }
 }
