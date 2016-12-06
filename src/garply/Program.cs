@@ -27,17 +27,18 @@ namespace Garply
             string line;
             while (true)
             {
-                var strings = Heap.StringDump;
-                var lists = Heap.ListDump;
-                var tuples = Heap.TupleDump;
-
-                var expressions = Heap.ExpressionDump(executionContext);
-
-                var refCounts = Heap.RefCountDump;
                 Console.Write("garply> ");
                 switch (line = Console.ReadLine().Trim())
                 {
                     case ":q": return;
+                    case ":heap":
+                        Console.WriteLine();
+                        Console.WriteLine(Heap.StringDump);
+                        Console.WriteLine(Heap.ListDump);
+                        Console.WriteLine(Heap.TupleDump);
+                        Console.WriteLine(Heap.ExpressionDump(executionContext));
+                        Console.WriteLine();
+                        continue;
                 }
                 var parseResult = parser.ParseLine(line);
                 switch (parseResult.Type)
@@ -49,18 +50,18 @@ namespace Garply
                         {
                             var error = executionContext.GetError();
                             Console.WriteLine(error.ToString());
-                            Heap.DecrementTupleRefCount(error);
+                            error.RemoveRef();
                         }
                         else Console.WriteLine(value.ToString());
-                        Heap.DecrementRefCount(value);
-                        Heap.DecrementExpressionRefCount(parseResult);
+                        value.RemoveRef();
+                        parseResult.RemoveRef();
                         break;
                     }
                     case Types.Error:
                     {
                         var error = executionContext.GetError();
                         Console.WriteLine(error.ToString());
-                        Heap.DecrementTupleRefCount(error);
+                        error.RemoveRef();
                         break;
                     }
                     default: break;

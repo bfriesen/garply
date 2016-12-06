@@ -4,24 +4,27 @@ using System.Threading;
 
 namespace Garply
 {
-    public sealed class Heap
+    public static  class Heap
     {
-        private readonly List<string> _strings = new List<string>();
-        private readonly List<List> _lists = new List<List>();
-        private readonly List<Tuple> _tuples = new List<Tuple>();
-        private readonly List<Expression> _expressions = new List<Expression>();
+        private class HeapInstance
+        {
+            public readonly List<string> _strings = new List<string>();
+            public readonly List<List> _lists = new List<List>() { new List(default(Value), 0) };
+            public readonly List<Tuple> _tuples = new List<Tuple>() { new Tuple(new Value[0]) };
+            public readonly List<Expression> _expressions = new List<Expression>();
 
-        private readonly List<int> _stringReferenceCounts = new List<int>();
-        private readonly List<int> _listReferenceCounts = new List<int>();
-        private readonly List<int> _tupleReferenceCounts = new List<int>();
-        private readonly List<int> _expressionReferenceCounts = new List<int>();
+            public readonly List<int> _stringReferenceCounts = new List<int>();
+            public readonly List<int> _listReferenceCounts = new List<int>() { int.MaxValue / 2 };
+            public readonly List<int> _tupleReferenceCounts = new List<int>() { int.MaxValue / 2 };
+            public readonly List<int> _expressionReferenceCounts = new List<int>();
 
-        private readonly Queue<int> _availableStringIndexes = new Queue<int>();
-        private readonly Queue<int> _availableListIndexes = new Queue<int>();
-        private readonly Queue<int> _availableTupleIndexes = new Queue<int>();
-        private readonly Queue<int> _availableExpressionIndexes = new Queue<int>();
+            public readonly Queue<int> _availableStringIndexes = new Queue<int>();
+            public readonly Queue<int> _availableListIndexes = new Queue<int>();
+            public readonly Queue<int> _availableTupleIndexes = new Queue<int>();
+            public readonly Queue<int> _availableExpressionIndexes = new Queue<int>();
+        }
 
-        private static readonly ThreadLocal<Heap> _instance = new ThreadLocal<Heap>(() => new Heap());
+        private static readonly ThreadLocal<HeapInstance> _instance = new ThreadLocal<HeapInstance>(() => new HeapInstance());
 
         public static string StringDump =>
             $@"string values: [{string.Join(", ", _instance.Value._strings)}]
@@ -48,8 +51,6 @@ available expression indexes: [{string.Join(", ", _instance.Value._availableExpr
 list refs: [{string.Join(", ", _instance.Value._listReferenceCounts)}]
 tuple refs: [{string.Join(", ", _instance.Value._tupleReferenceCounts)}]
 expression refs: [{string.Join(", ", _instance.Value._expressionReferenceCounts)}]";
-
-        private Heap() { }
 
         public static Value AllocateString(string rawValue)
         {
@@ -98,7 +99,6 @@ expression refs: [{string.Join(", ", _instance.Value._expressionReferenceCounts)
                 instance._tupleReferenceCounts.Add(0);
             }
             var value = new Value(Types.Tuple, tupleId);
-            IncrementTupleRefCount(value);
             return value;
         }
 
@@ -130,7 +130,6 @@ expression refs: [{string.Join(", ", _instance.Value._expressionReferenceCounts)
                 instance._listReferenceCounts.Add(0);
             }
             var value = new Value(Types.List, listId);
-            IncrementListRefCount(value);
             return value;
         }
 
@@ -195,7 +194,7 @@ expression refs: [{string.Join(", ", _instance.Value._expressionReferenceCounts)
             return _instance.Value._expressions.IndexOf(value);
         }
 
-        public static void IncrementRefCount(Value value)
+        public static void AddRef(this Value value)
         {
             switch (value.Type)
             {
@@ -214,27 +213,27 @@ expression refs: [{string.Join(", ", _instance.Value._expressionReferenceCounts)
             }
         }
 
-        public static void IncrementStringRefCount(Value stringValue)
+        private static void IncrementStringRefCount(Value stringValue)
         {
             _instance.Value._stringReferenceCounts[(int)stringValue.Raw]++;
         }
 
-        public static void IncrementTupleRefCount(Value tupleValue)
+        private static void IncrementTupleRefCount(Value tupleValue)
         {
             _instance.Value._tupleReferenceCounts[(int)tupleValue.Raw]++;
         }
 
-        public static void IncrementListRefCount(Value listValue)
+        private static void IncrementListRefCount(Value listValue)
         {
             _instance.Value._listReferenceCounts[(int)listValue.Raw]++;
         }
 
-        public static void IncrementExpressionRefCount(Value expressionValue)
+        private static void IncrementExpressionRefCount(Value expressionValue)
         {
             _instance.Value._expressionReferenceCounts[(int)expressionValue.Raw]++;
         }
 
-        public static void DecrementRefCount(Value value)
+        public static void RemoveRef(this Value value)
         {
             switch (value.Type)
             {
@@ -253,7 +252,7 @@ expression refs: [{string.Join(", ", _instance.Value._expressionReferenceCounts)
             }
         }
 
-        public static void DecrementStringRefCount(Value stringValue)
+        private static void DecrementStringRefCount(Value stringValue)
         {
             var instance = _instance.Value;
             var stringIndex = (int)stringValue.Raw;
@@ -265,7 +264,7 @@ expression refs: [{string.Join(", ", _instance.Value._expressionReferenceCounts)
             }
         }
 
-        public static void DecrementTupleRefCount(Value tupleValue)
+        private static void DecrementTupleRefCount(Value tupleValue)
         {
             var instance = _instance.Value;
             var tupleIndex = (int)tupleValue.Raw;
@@ -275,8 +274,7 @@ expression refs: [{string.Join(", ", _instance.Value._expressionReferenceCounts)
                 var tuple = GetTuple(tupleIndex);
                 for (int i = 0; i < tuple.Items.Count; i++)
                 {
-                    var item = tuple.Items[i];
-                    DecrementRefCount(item);
+                    tuple.Items[i].RemoveRef();
                 }
 
                 if (instance._tupleReferenceCounts[tupleIndex] == 0)
@@ -287,7 +285,7 @@ expression refs: [{string.Join(", ", _instance.Value._expressionReferenceCounts)
             }
         }
 
-        public static void DecrementListRefCount(Value listValue)
+        private static void DecrementListRefCount(Value listValue)
         {
             DecrementListRefCount((int)listValue.Raw);
         }
@@ -300,7 +298,7 @@ expression refs: [{string.Join(", ", _instance.Value._expressionReferenceCounts)
             if (instance._listReferenceCounts[listIndex] == 0)
             {
                 var list = GetList(listIndex);
-                DecrementRefCount(list.Head);
+                list.Head.RemoveRef();
                 DecrementListRefCount(list.TailIndex);
 
                 if (instance._listReferenceCounts[listIndex] == 0)
@@ -311,7 +309,7 @@ expression refs: [{string.Join(", ", _instance.Value._expressionReferenceCounts)
             }
         }
 
-        public static void DecrementExpressionRefCount(Value expressionValue)
+        private static void DecrementExpressionRefCount(Value expressionValue)
         {
             var instance = _instance.Value;
             var expressionIndex = (int)expressionValue.Raw;

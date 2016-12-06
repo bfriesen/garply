@@ -2,6 +2,7 @@
 using System.Linq;
 using System;
 using Garply.SpracheLib;
+using System.Diagnostics;
 
 namespace Garply
 {
@@ -195,8 +196,9 @@ namespace Garply
             var instructions = new List<Instruction>();
             foreach (var item in items)
             {
+                Debug.Assert(item.Type == Types.Expression);
                 instructions.AddRange(Heap.GetExpression((int)item.Raw).Instructions);
-                Heap.DecrementExpressionRefCount(item);
+                item.RemoveRef();
             }
             instructions.Add(new Instruction(Opcode.NewTuple, new Value(arity)));
             return instructions.ToArray();
@@ -225,8 +227,11 @@ namespace Garply
 
             for (int i = items.Count - 1; i >= 0; i--)
             {
-                instructions.AddRange(Heap.GetExpression((int)items[i].Raw).Instructions);
+                var item = items[i];
+                Debug.Assert(item.Type == Types.Expression);
+                instructions.AddRange(Heap.GetExpression((int)item.Raw).Instructions);
                 instructions.Add(new Instruction(Opcode.ListAdd));
+                item.RemoveRef();
             }
 
             return instructions.ToArray();

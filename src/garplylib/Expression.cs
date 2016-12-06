@@ -72,7 +72,6 @@ namespace Garply
                     case Opcode.LoadInteger:
                     case Opcode.LoadFloat:
                     case Opcode.LoadBoolean:
-                    case Opcode.LoadString:
                         context.Push(instruction.Operand);
                         break;
                     case Opcode.LoadType:
@@ -81,21 +80,30 @@ namespace Garply
                             context.Push(new Value(type));
                             break;
                         }
+                    case Opcode.LoadString:
+                        {
+                            Debug.Assert(instruction.Operand.Type == Types.String);
+                            context.Push(instruction.Operand);
+                            instruction.Operand.AddRef();
+                            break;
+                        }
                     case Opcode.GetType:
                         {
-                            var type = context.Pop().Type;
+                            var value = context.Pop();
+                            var type = value.Type;
                             context.Push(new Value(type));
+                            value.RemoveRef();
                             break;
                         }
                     case Opcode.TypeIs:
                         {
-                            var value = context.Pop();
-                            Debug.Assert(value.Type == Types.Type);
-                            var rhsType = (Types)(uint)value.Raw;
+                            var rhsValue = context.Pop();
+                            Debug.Assert(rhsValue.Type == Types.Type);
+                            var rhsType = (Types)(uint)rhsValue.Raw;
 
-                            value = context.Pop();
-                            Debug.Assert(value.Type == Types.Type);
-                            var lhsType = (Types)(uint)value.Raw;
+                            var lhsValue = context.Pop();
+                            Debug.Assert(lhsValue.Type == Types.Type);
+                            var lhsType = (Types)(uint)lhsValue.Raw;
 
                             var lhsTypeIsRhsType = (lhsType & rhsType) != 0 && lhsType >= rhsType;
                             context.Push(new Value(lhsTypeIsRhsType));
@@ -103,13 +111,13 @@ namespace Garply
                         }
                     case Opcode.TypeEquals:
                         {
-                            var value = context.Pop();
-                            Debug.Assert(value.Type == Types.Type);
-                            var rhsType = (Types)(uint)value.Raw;
+                            var rhsValue = context.Pop();
+                            Debug.Assert(rhsValue.Type == Types.Type);
+                            var rhsType = (Types)(uint)rhsValue.Raw;
 
-                            value = context.Pop();
-                            Debug.Assert(value.Type == Types.Type);
-                            var lhsType = (Types)(uint)value.Raw;
+                            var lhsValue = context.Pop();
+                            Debug.Assert(lhsValue.Type == Types.Type);
+                            var lhsType = (Types)(uint)lhsValue.Raw;
 
                             var lhsTypeEqualsRhsType = lhsType == rhsType;
                             context.Push(new Value(lhsTypeEqualsRhsType));
@@ -117,9 +125,12 @@ namespace Garply
                         }
                     case Opcode.TupleArity:
                         {
-                            var tuple = Heap.GetTuple((int)context.Pop().Raw);
+                            var tupleValue = context.Pop();
+                            Debug.Assert(tupleValue.Type == Types.Tuple);
+                            var tuple = Heap.GetTuple((int)tupleValue.Raw);
                             var arity = tuple.Items.Count;
                             context.Push(new Value(arity));
+                            tupleValue.RemoveRef();
                             break;
                         }
                     case Opcode.TupleItem:
@@ -129,6 +140,8 @@ namespace Garply
                             var index = (int)instruction.Operand.Raw;
                             var item = tuple.Items[index];
                             context.Push(item);
+                            item.AddRef();
+                            tupleValue.RemoveRef();
                             break;
                         }
                     case Opcode.NewTuple:
@@ -136,20 +149,22 @@ namespace Garply
                             var arity = (int)instruction.Operand.Raw;
                             var tuple = Heap.AllocateTuple(arity, context);
                             context.Push(tuple);
+                            tuple.AddRef();
                             break;
                         }
                     case Opcode.ListEmpty:
                         {
-                            var list = Empty.List;
-                            context.Push(list);
+                            context.Push(Empty.List);
                             break;
                         }
                     case Opcode.ListAdd:
                         {
                             var head = context.Pop();
                             var tail = context.Pop();
+                            // No need to remove ref for head and tail - their refs are "taken" by the new list.
                             var list = Heap.AllocateList(head, tail);
                             context.Push(list);
+                            list.AddRef();
                             break;
                         }
                     case Opcode.ListHead:
@@ -158,6 +173,7 @@ namespace Garply
                             var list = Heap.GetList((int)listValue.Raw);
                             var head = list.Head;
                             context.Push(head);
+                            listValue.RemoveRef();
                             break;
                         }
                     case Opcode.ListTail:
@@ -166,6 +182,8 @@ namespace Garply
                             var list = Heap.GetList((int)listValue.Raw);
                             var tail = new Value(Types.List, list.TailIndex);
                             context.Push(tail);
+                            tail.AddRef();
+                            listValue.RemoveRef();
                             break;
                         }
                 }
