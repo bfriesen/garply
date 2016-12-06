@@ -8,22 +8,22 @@ namespace Garply
     {
         private class HeapInstance
         {
-            public readonly List<string> _strings = new List<string>();
-            public readonly List<List> _lists = new List<List>() { new List(default(Value), 0) };
-            public readonly List<Tuple> _tuples = new List<Tuple>() { new Tuple(new Value[0]) };
-            public readonly List<Expression> _expressions = new List<Expression>();
+            public readonly List<string> Strings = new List<string>();
+            public readonly List<List> Lists = new List<List>() { new List(default(Value), 0) };
+            public readonly List<Tuple> Tuples = new List<Tuple>() { new Tuple(new Value[0]) };
+            public readonly List<Expression> Expressions = new List<Expression>();
 
-            public readonly List<int> _stringReferenceCounts = new List<int>();
-            public readonly List<int> _listReferenceCounts = new List<int>() { int.MaxValue / 2 };
-            public readonly List<int> _tupleReferenceCounts = new List<int>() { int.MaxValue / 2 };
-            public readonly List<int> _expressionReferenceCounts = new List<int>();
+            public readonly List<int> StringReferenceCounts = new List<int>();
+            public readonly List<int> ListReferenceCounts = new List<int>() { int.MaxValue / 2 };
+            public readonly List<int> TupleReferenceCounts = new List<int>() { int.MaxValue / 2 };
+            public readonly List<int> ExpressionReferenceCounts = new List<int>();
 
-            public readonly Queue<int> _availableStringIndexes = new Queue<int>();
-            public readonly Queue<int> _availableListIndexes = new Queue<int>();
-            public readonly Queue<int> _availableTupleIndexes = new Queue<int>();
-            public readonly Queue<int> _availableExpressionIndexes = new Queue<int>();
+            public readonly Queue<int> AvailableStringIndexes = new Queue<int>();
+            public readonly Queue<int> AvailableListIndexes = new Queue<int>();
+            public readonly Queue<int> AvailableTupleIndexes = new Queue<int>();
+            public readonly Queue<int> AvailableExpressionIndexes = new Queue<int>();
 
-            public readonly Dictionary<long, int> _stringIndexLookup = new Dictionary<long, int>();
+            public readonly Dictionary<long, int> StringIndexLookup = new Dictionary<long, int>();
         }
 
         private static readonly ThreadLocal<HeapInstance> _instance = new ThreadLocal<HeapInstance>(() => new HeapInstance());
@@ -35,14 +35,14 @@ namespace Garply
             if (constant)
             {
                 var databaseId = rawValue.GetLongHashCode();
-                if (instance._stringIndexLookup.ContainsKey(databaseId))
+                if (instance.StringIndexLookup.ContainsKey(databaseId))
                 {
-                    stringId = instance._stringIndexLookup[databaseId];
+                    stringId = instance.StringIndexLookup[databaseId];
                 }
                 else
                 {
                     stringId = AllocateString(instance, rawValue);
-                    instance._stringIndexLookup.Add(databaseId, stringId);
+                    instance.StringIndexLookup.Add(databaseId, stringId);
                 }
             }
             else
@@ -57,16 +57,16 @@ namespace Garply
         private static int AllocateString(HeapInstance instance, string rawValue)
         {
             int stringId;
-            if (instance._availableStringIndexes.Count > 0)
+            if (instance.AvailableStringIndexes.Count > 0)
             {
-                stringId = instance._availableStringIndexes.Dequeue();
-                instance._strings[stringId] = rawValue;
+                stringId = instance.AvailableStringIndexes.Dequeue();
+                instance.Strings[stringId] = rawValue;
             }
             else
             {
-                stringId = instance._strings.Count;
-                instance._strings.Add(rawValue);
-                instance._stringReferenceCounts.Add(0);
+                stringId = instance.Strings.Count;
+                instance.Strings.Add(rawValue);
+                instance.StringReferenceCounts.Add(0);
             }
             return stringId;
         }
@@ -86,16 +86,16 @@ namespace Garply
             var instance = _instance.Value;
             var tuple = new Tuple(items);
             int tupleId;
-            if (instance._availableTupleIndexes.Count > 0)
+            if (instance.AvailableTupleIndexes.Count > 0)
             {
-                tupleId = instance._availableTupleIndexes.Dequeue();
-                instance._tuples[tupleId] = tuple;
+                tupleId = instance.AvailableTupleIndexes.Dequeue();
+                instance.Tuples[tupleId] = tuple;
             }
             else
             {
-                tupleId = instance._tuples.Count;
-                instance._tuples.Add(tuple);
-                instance._tupleReferenceCounts.Add(0);
+                tupleId = instance.Tuples.Count;
+                instance.Tuples.Add(tuple);
+                instance.TupleReferenceCounts.Add(0);
             }
             var value = new Value(Types.Tuple, tupleId);
             return value;
@@ -117,16 +117,16 @@ namespace Garply
             var tailId = (int)tail.Raw;
             var list = new List(head, tailId);
             int listId;
-            if (instance._availableListIndexes.Count > 0)
+            if (instance.AvailableListIndexes.Count > 0)
             {
-                listId = instance._availableListIndexes.Dequeue();
-                instance._lists[listId] = list;
+                listId = instance.AvailableListIndexes.Dequeue();
+                instance.Lists[listId] = list;
             }
             else
             {
-                listId = instance._lists.Count;
-                instance._lists.Add(list);
-                instance._listReferenceCounts.Add(0);
+                listId = instance.Lists.Count;
+                instance.Lists.Add(list);
+                instance.ListReferenceCounts.Add(0);
             }
             var value = new Value(Types.List, listId);
             return value;
@@ -137,16 +137,16 @@ namespace Garply
             var instance = _instance.Value;
             var expression = new Expression(type, instructions);
             int expressionId;
-            if (instance._availableExpressionIndexes.Count > 0)
+            if (instance.AvailableExpressionIndexes.Count > 0)
             {
-                expressionId = instance._availableExpressionIndexes.Dequeue();
-                instance._expressions[expressionId] = expression;
+                expressionId = instance.AvailableExpressionIndexes.Dequeue();
+                instance.Expressions[expressionId] = expression;
             }
             else
             {
-                expressionId = instance._expressions.Count;
-                instance._expressions.Add(expression);
-                instance._expressionReferenceCounts.Add(0);
+                expressionId = instance.Expressions.Count;
+                instance.Expressions.Add(expression);
+                instance.ExpressionReferenceCounts.Add(0);
             }
             var value = new Value(Types.Expression, expressionId);
             return value;
@@ -154,42 +154,42 @@ namespace Garply
 
         public static string GetString(int stringIndex)
         {
-            return _instance.Value._strings[stringIndex];
+            return _instance.Value.Strings[stringIndex];
         }
 
         public static Tuple GetTuple(int tupleIndex)
         {
-            return _instance.Value._tuples[tupleIndex];
+            return _instance.Value.Tuples[tupleIndex];
         }
 
         public static List GetList(int listIndex)
         {
-            return _instance.Value._lists[listIndex];
+            return _instance.Value.Lists[listIndex];
         }
 
         public static Expression GetExpression(int expressionIndex)
         {
-            return _instance.Value._expressions[expressionIndex];
+            return _instance.Value.Expressions[expressionIndex];
         }
 
         public static int IndexOf(string value)
         {
-            return _instance.Value._strings.IndexOf(value);
+            return _instance.Value.Strings.IndexOf(value);
         }
 
         public static int IndexOf(Tuple value)
         {
-            return _instance.Value._tuples.IndexOf(value);
+            return _instance.Value.Tuples.IndexOf(value);
         }
 
         public static int IndexOf(List value)
         {
-            return _instance.Value._lists.IndexOf(value);
+            return _instance.Value.Lists.IndexOf(value);
         }
 
         public static int IndexOf(Expression value)
         {
-            return _instance.Value._expressions.IndexOf(value);
+            return _instance.Value.Expressions.IndexOf(value);
         }
 
         public static void AddRef(this Value value)
@@ -197,16 +197,16 @@ namespace Garply
             switch (value.Type)
             {
                 case Types.String:
-                    _instance.Value._stringReferenceCounts[(int)value.Raw]++;
+                    _instance.Value.StringReferenceCounts[(int)value.Raw]++;
                     break;
                 case Types.Tuple:
-                    _instance.Value._tupleReferenceCounts[(int)value.Raw]++;
+                    _instance.Value.TupleReferenceCounts[(int)value.Raw]++;
                     break;
                 case Types.List:
-                    _instance.Value._listReferenceCounts[(int)value.Raw]++;
+                    _instance.Value.ListReferenceCounts[(int)value.Raw]++;
                     break;
                 case Types.Expression:
-                    _instance.Value._expressionReferenceCounts[(int)value.Raw]++;
+                    _instance.Value.ExpressionReferenceCounts[(int)value.Raw]++;
                     break;
             }
         }
@@ -234,12 +234,12 @@ namespace Garply
         {
             var instance = _instance.Value;
             var stringIndex = (int)stringValue.Raw;
-            instance._stringReferenceCounts[stringIndex]--;
-            if (instance._stringReferenceCounts[stringIndex] == 0)
+            instance.StringReferenceCounts[stringIndex]--;
+            if (instance.StringReferenceCounts[stringIndex] == 0)
             {
-                instance._stringIndexLookup.Remove(instance._strings[stringIndex].GetLongHashCode());
-                instance._strings[stringIndex] = null;
-                instance._availableStringIndexes.Enqueue(stringIndex);
+                instance.StringIndexLookup.Remove(instance.Strings[stringIndex].GetLongHashCode());
+                instance.Strings[stringIndex] = null;
+                instance.AvailableStringIndexes.Enqueue(stringIndex);
             }
         }
 
@@ -247,8 +247,8 @@ namespace Garply
         {
             var instance = _instance.Value;
             var tupleIndex = (int)tupleValue.Raw;
-            instance._tupleReferenceCounts[tupleIndex]--;
-            if (instance._tupleReferenceCounts[tupleIndex] == 0)
+            instance.TupleReferenceCounts[tupleIndex]--;
+            if (instance.TupleReferenceCounts[tupleIndex] == 0)
             {
                 var tuple = GetTuple(tupleIndex);
                 for (int i = 0; i < tuple.Items.Count; i++)
@@ -256,10 +256,10 @@ namespace Garply
                     tuple.Items[i].RemoveRef();
                 }
 
-                if (instance._tupleReferenceCounts[tupleIndex] == 0)
+                if (instance.TupleReferenceCounts[tupleIndex] == 0)
                 {
-                    instance._tuples[tupleIndex] = default(Tuple);
-                    instance._availableTupleIndexes.Enqueue(tupleIndex);
+                    instance.Tuples[tupleIndex] = default(Tuple);
+                    instance.AvailableTupleIndexes.Enqueue(tupleIndex);
                 }
             }
         }
@@ -273,17 +273,17 @@ namespace Garply
         {
             if (listIndex == 0) return;
             var instance = _instance.Value;
-            instance._listReferenceCounts[listIndex]--;
-            if (instance._listReferenceCounts[listIndex] == 0)
+            instance.ListReferenceCounts[listIndex]--;
+            if (instance.ListReferenceCounts[listIndex] == 0)
             {
                 var list = GetList(listIndex);
                 list.Head.RemoveRef();
                 DecrementListRefCount(list.TailIndex);
 
-                if (instance._listReferenceCounts[listIndex] == 0)
+                if (instance.ListReferenceCounts[listIndex] == 0)
                 {
-                    instance._lists[listIndex] = default(List);
-                    instance._availableListIndexes.Enqueue(listIndex);
+                    instance.Lists[listIndex] = default(List);
+                    instance.AvailableListIndexes.Enqueue(listIndex);
                 }
             }
         }
@@ -292,38 +292,38 @@ namespace Garply
         {
             var instance = _instance.Value;
             var expressionIndex = (int)expressionValue.Raw;
-            instance._expressionReferenceCounts[expressionIndex]--;
-            if (instance._expressionReferenceCounts[expressionIndex] == 0)
+            instance.ExpressionReferenceCounts[expressionIndex]--;
+            if (instance.ExpressionReferenceCounts[expressionIndex] == 0)
             {
-                instance._expressions[expressionIndex] = default(Expression);
-                instance._availableExpressionIndexes.Enqueue(expressionIndex);
+                instance.Expressions[expressionIndex] = default(Expression);
+                instance.AvailableExpressionIndexes.Enqueue(expressionIndex);
             }
         }
 
         public static string StringDump =>
-            $@"string values: [{string.Join(", ", _instance.Value._strings.Select(x => x ?? "|Empty|"))}]
-string refs: [{string.Join(", ", _instance.Value._stringReferenceCounts)}]
-available string indexes: [{string.Join(", ", _instance.Value._availableStringIndexes)}]";
+            $@"string values: [{string.Join(", ", _instance.Value.Strings.Select(x => x ?? "|Empty|"))}]
+string refs: [{string.Join(", ", _instance.Value.StringReferenceCounts)}]
+available string indexes: [{string.Join(", ", _instance.Value.AvailableStringIndexes)}]";
 
         public static string ListDump =>
-$@"list values: [{string.Join(", ", _instance.Value._lists.Select(x => x.IsEmpty ? "|Empty|" : x.ToString()))}]
-list refs: [{string.Join(", ", _instance.Value._listReferenceCounts)}]
-available list indexes: [{string.Join(", ", _instance.Value._availableListIndexes)}]";
+$@"list values: [{string.Join(", ", _instance.Value.Lists.Select(x => x.IsEmpty ? "|Empty|" : x.ToString()))}]
+list refs: [{string.Join(", ", _instance.Value.ListReferenceCounts)}]
+available list indexes: [{string.Join(", ", _instance.Value.AvailableListIndexes)}]";
 
         public static string TupleDump =>
-$@"tuple values: [{string.Join(", ", _instance.Value._tuples.Select(x => x.IsEmpty ? "|Empty|" : x.ToString()))}]
-tuple refs: [{string.Join(", ", _instance.Value._tupleReferenceCounts)}]
-available tuple indexes: [{string.Join(", ", _instance.Value._availableTupleIndexes)}]";
+$@"tuple values: [{string.Join(", ", _instance.Value.Tuples.Select(x => x.IsEmpty ? "|Empty|" : x.ToString()))}]
+tuple refs: [{string.Join(", ", _instance.Value.TupleReferenceCounts)}]
+available tuple indexes: [{string.Join(", ", _instance.Value.AvailableTupleIndexes)}]";
 
         public static string ExpressionDump(IExecutionContext context) =>
-$@"expression values: [{string.Join(", ", _instance.Value._expressions.Select(x => x.Type == Types.Error ? "|Empty|" : x.Evaluate(context).ToString()))}]
-expression refs: [{string.Join(", ", _instance.Value._expressionReferenceCounts)}]
-available expression indexes: [{string.Join(", ", _instance.Value._availableExpressionIndexes)}]";
+$@"expression values: [{string.Join(", ", _instance.Value.Expressions.Select(x => x.Type == Types.Error ? "|Empty|" : x.Evaluate(context).ToString()))}]
+expression refs: [{string.Join(", ", _instance.Value.ExpressionReferenceCounts)}]
+available expression indexes: [{string.Join(", ", _instance.Value.AvailableExpressionIndexes)}]";
 
         public static string RefCountDump =>
-$@"string refs: [{string.Join(", ", _instance.Value._stringReferenceCounts)}]
-list refs: [{string.Join(", ", _instance.Value._listReferenceCounts)}]
-tuple refs: [{string.Join(", ", _instance.Value._tupleReferenceCounts)}]
-expression refs: [{string.Join(", ", _instance.Value._expressionReferenceCounts)}]";
+$@"string refs: [{string.Join(", ", _instance.Value.StringReferenceCounts)}]
+list refs: [{string.Join(", ", _instance.Value.ListReferenceCounts)}]
+tuple refs: [{string.Join(", ", _instance.Value.TupleReferenceCounts)}]
+expression refs: [{string.Join(", ", _instance.Value.ExpressionReferenceCounts)}]";
     }
 }
