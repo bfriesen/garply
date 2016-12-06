@@ -22,7 +22,6 @@ namespace Garply
             var parser = new GarplyParser(executionContext);
 
             Console.Clear();
-            Console.WriteLine(@"Welcome to the garply REPL. Type "":q"" to exit.");
 
             string line;
             while (true)
@@ -30,8 +29,10 @@ namespace Garply
                 Console.Write("garply> ");
                 switch (line = Console.ReadLine().Trim())
                 {
+                    case "": continue;
                     case ":q": return;
-                    case ":heap":
+                    case ":c": Console.Clear(); continue;
+                    case ":h":
                         Console.WriteLine();
                         Console.WriteLine(Heap.StringDump);
                         Console.WriteLine(Heap.ListDump);

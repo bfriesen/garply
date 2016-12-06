@@ -28,35 +28,47 @@ namespace Garply
 
         private static readonly ThreadLocal<HeapInstance> _instance = new ThreadLocal<HeapInstance>(() => new HeapInstance());
 
-        public static Value AllocateString(string rawValue)
+        public static Value AllocateString(string rawValue, bool constant)
         {
             var instance = _instance.Value;
-
             int stringId;
-            var databaseId = rawValue.GetLongHashCode();
-
-            if (instance._stringIndexLookup.ContainsKey(databaseId))
+            if (constant)
             {
-                stringId = instance._stringIndexLookup[databaseId];
-            }
-            else
-            {
-                if (instance._availableStringIndexes.Count > 0)
+                var databaseId = rawValue.GetLongHashCode();
+                if (instance._stringIndexLookup.ContainsKey(databaseId))
                 {
-                    stringId = instance._availableStringIndexes.Dequeue();
-                    instance._strings[stringId] = rawValue;
+                    stringId = instance._stringIndexLookup[databaseId];
                 }
                 else
                 {
-                    stringId = instance._strings.Count;
-                    instance._strings.Add(rawValue);
-                    instance._stringReferenceCounts.Add(0);
+                    stringId = AllocateString(instance, rawValue);
+                    instance._stringIndexLookup.Add(databaseId, stringId);
                 }
-                instance._stringIndexLookup.Add(databaseId, stringId);
+            }
+            else
+            {
+                stringId = AllocateString(instance, rawValue);
             }
             
             var value = new Value(Types.String, stringId);
             return value;
+        }
+
+        private static int AllocateString(HeapInstance instance, string rawValue)
+        {
+            int stringId;
+            if (instance._availableStringIndexes.Count > 0)
+            {
+                stringId = instance._availableStringIndexes.Dequeue();
+                instance._strings[stringId] = rawValue;
+            }
+            else
+            {
+                stringId = instance._strings.Count;
+                instance._strings.Add(rawValue);
+                instance._stringReferenceCounts.Add(0);
+            }
+            return stringId;
         }
 
         public static Value AllocateTuple(int arity, IExecutionContext context)
@@ -137,7 +149,6 @@ namespace Garply
                 instance._expressionReferenceCounts.Add(0);
             }
             var value = new Value(Types.Expression, expressionId);
-            IncrementExpressionRefCount(value);
             return value;
         }
 
@@ -186,38 +197,18 @@ namespace Garply
             switch (value.Type)
             {
                 case Types.String:
-                    IncrementStringRefCount(value);
+                    _instance.Value._stringReferenceCounts[(int)value.Raw]++;
                     break;
                 case Types.Tuple:
-                    IncrementTupleRefCount(value);
+                    _instance.Value._tupleReferenceCounts[(int)value.Raw]++;
                     break;
                 case Types.List:
-                    IncrementListRefCount(value);
+                    _instance.Value._listReferenceCounts[(int)value.Raw]++;
                     break;
                 case Types.Expression:
-                    IncrementExpressionRefCount(value);
+                    _instance.Value._expressionReferenceCounts[(int)value.Raw]++;
                     break;
             }
-        }
-
-        private static void IncrementStringRefCount(Value stringValue)
-        {
-            _instance.Value._stringReferenceCounts[(int)stringValue.Raw]++;
-        }
-
-        private static void IncrementTupleRefCount(Value tupleValue)
-        {
-            _instance.Value._tupleReferenceCounts[(int)tupleValue.Raw]++;
-        }
-
-        private static void IncrementListRefCount(Value listValue)
-        {
-            _instance.Value._listReferenceCounts[(int)listValue.Raw]++;
-        }
-
-        private static void IncrementExpressionRefCount(Value expressionValue)
-        {
-            _instance.Value._expressionReferenceCounts[(int)expressionValue.Raw]++;
         }
 
         public static void RemoveRef(this Value value)
