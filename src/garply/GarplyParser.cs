@@ -16,14 +16,12 @@ namespace Garply
             _mainParser = new MainParser();
             _errorContext = errorContext;
 
-            var whitespaceParser = GetWhitespaceParser();
             var literalParser = GetLiteralExpressionParser();
 
-            _mainParser.SetParser((
+            _mainParser.SetParser(
                 from whitespace in Parse.WhiteSpace.Many()
                 from result in literalParser
-                select result)
-                .Or(whitespaceParser));
+                select result);
         }
 
         public Value ParseLine(string line)
@@ -47,15 +45,6 @@ namespace Garply
             }
         }
 
-        private Parser<Value> GetWhitespaceParser()
-        {
-            var whitespaceParser =
-                from whitespace in Parse.WhiteSpace.Many()
-                select Empty.Tuple;
-
-            return whitespaceParser;
-        }
-
         private Parser<Value> GetLiteralExpressionParser()
         {
             var booleanParser = GetBooleanLiteralParser();
@@ -77,11 +66,17 @@ namespace Garply
         {
             var trueParser =
                 from t in Parse.String("true")
-                select Heap.AllocateExpression(Types.Boolean, new Instruction[] { new Instruction(Opcode.LoadBoolean, new Value(true)) });
+                select AllocateExpression(Types.Boolean, new Instruction[]
+                {
+                    new Instruction(Opcode.LoadBoolean, new Value(true))
+                });
 
             var falseParser =
-                from t in Parse.String("false")
-                select Heap.AllocateExpression(Types.Boolean, new Instruction[] { new Instruction(Opcode.LoadBoolean, new Value(false)) });
+                from f in Parse.String("false")
+                select AllocateExpression(Types.Boolean, new Instruction[]
+                {
+                    new Instruction(Opcode.LoadBoolean, new Value(false))
+                });
 
             return trueParser.Or(falseParser);
         }
@@ -91,7 +86,12 @@ namespace Garply
             var integerParser =
                 from negate in Parse.Char('-').Optional()
                 from digits in Parse.Numeric.AtLeastOnce()
-                select Heap.AllocateExpression(Types.Integer, new Instruction[] { new Instruction(Opcode.LoadInteger, ParseLong(digits, negate.IsDefined)) });
+                let value = ParseLong(digits, negate.IsDefined)
+                where value.Type != Types.Error
+                select AllocateExpression(Types.Integer, new Instruction[]
+                {
+                    new Instruction(Opcode.LoadInteger, value)
+                });
 
             return integerParser;
         }
@@ -103,9 +103,8 @@ namespace Garply
             {
                 return new Value(long.Parse(stringValue));
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                _errorContext.AddError(new Error($"Invalid integer value: {stringValue}. {ex.Message}"));
                 return default(Value);
             }
         }
@@ -117,7 +116,12 @@ namespace Garply
                 from wholePart in Parse.Numeric.Many()
                 from dot in Parse.Char('.')
                 from fractionalPart in Parse.Numeric.AtLeastOnce()
-                select Heap.AllocateExpression(Types.Float, new Instruction[] { new Instruction(Opcode.LoadFloat, ParseFloat(wholePart, fractionalPart, negate.IsDefined)) });
+                let value = ParseFloat(wholePart, fractionalPart, negate.IsDefined)
+                where value.Type != Types.Error
+                select AllocateExpression(Types.Float, new Instruction[]
+                {
+                    new Instruction(Opcode.LoadFloat, value)
+                });
 
             return integerParser;
         }
@@ -133,9 +137,8 @@ namespace Garply
             {
                 return new Value(double.Parse(stringValue));
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                _errorContext.AddError(new Error($"Invalid float value: {stringValue}. {ex.Message}"));
                 return default(Value);
             }
         }
@@ -158,7 +161,10 @@ namespace Garply
                 from openBrace in Parse.Char('<')
                 from type in typeParser
                 from closeBrace in Parse.Char('>')
-                select Heap.AllocateExpression(Types.Type, new Instruction[] { new Instruction(Opcode.LoadType, type) });
+                select AllocateExpression(Types.Type, new Instruction[]
+                {
+                    new Instruction(Opcode.LoadType, type)
+                });
         }
 
         private Parser<Value> GetStringLiteralParser()
@@ -170,8 +176,7 @@ namespace Garply
                     .Or(Parse.CharExcept('"'))
                     .Many().Text()
                 from closeQuote in Parse.Char('"')
-                select Heap.AllocateExpression(Types.String,
-                    GetStringLiteralRetreivalInstructions(value));
+                select AllocateExpression(Types.String, GetStringLiteralRetreivalInstructions(value));
 
             return stringParser;
         }
@@ -179,7 +184,10 @@ namespace Garply
         private Instruction[] GetStringLiteralRetreivalInstructions(string value)
         {
             var stringValue = StringDatabase.Register(value);
-            return new[] { new Instruction(Opcode.LoadString, stringValue) };
+            return new[]
+            {
+                new Instruction(Opcode.LoadString, stringValue)
+            };
         }
 
         private Parser<Value> GetTupleLiteralParser()
@@ -188,9 +196,8 @@ namespace Garply
                 from openParen in Parse.Char('(')
                 from items in Parse.Ref(() => _mainParser.Parser).DelimitedBy(Parse.Char(',').Token())
                 from closeParen in Parse.Char(')')
-                select Heap.AllocateExpression(Types.Tuple, 
+                select AllocateExpression(Types.Tuple,
                     GetTupleLiteralCreationInstructions(items as IList<Value> ?? items.ToList()));
-
             return tupleParser;
         }
 
@@ -218,7 +225,7 @@ namespace Garply
                     from w2 in Parse.WhiteSpace.Many()
                     select c)
                 from closeParen in Parse.Char(']')
-                select Heap.AllocateExpression(Types.List, GetListLiteralCreationInstructions(items as IList<Value> ?? items.ToList()));
+                select AllocateExpression(Types.List, GetListLiteralCreationInstructions(items as IList<Value> ?? items.ToList()));
 
             return tupleParser;
         }
@@ -226,19 +233,23 @@ namespace Garply
         private Instruction[] GetListLiteralCreationInstructions(IList<Value> items)
         {
             var instructions = new List<Instruction>();
-
             instructions.Add(new Instruction(Opcode.ListEmpty));
-
             for (int i = items.Count - 1; i >= 0; i--)
             {
-                var item = items[i];
-                Debug.Assert(item.Type == Types.Expression);
-                instructions.AddRange(Heap.GetExpression((int)item.Raw).Instructions);
+                var expressionValue = items[i];
+                Debug.Assert(expressionValue.Type == Types.Expression);
+                instructions.AddRange(Heap.GetExpression((int)expressionValue.Raw).Instructions);
                 instructions.Add(new Instruction(Opcode.ListAdd));
-                item.RemoveRef();
+                expressionValue.RemoveRef();
             }
-
             return instructions.ToArray();
+        }
+
+        private static Value AllocateExpression(Types type, Instruction[] instructions)
+        {
+            var expressionValue = Heap.AllocateExpression(Types.Tuple, instructions);
+            expressionValue.AddRef();
+            return expressionValue;
         }
 
         private IEnumerable<char> Once(char c, bool condition = true)

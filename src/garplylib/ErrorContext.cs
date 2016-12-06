@@ -17,8 +17,10 @@ namespace Garply
             while (_errors.Count > 0)
             {
                 var error = _errors.Dequeue();
-                var errorMessage = Heap.AllocateString(error.Message);
+                var errorMessage = Heap.AllocateString(error.Message, false);
+                errorMessage.AddRef();
                 errorTuple = Heap.AllocateTuple(errorMessage, errorTuple);
+                errorTuple.AddRef();
             }
             return errorTuple;
         }
