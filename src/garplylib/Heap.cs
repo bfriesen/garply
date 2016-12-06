@@ -310,27 +310,27 @@ namespace Garply
         }
 
         public static string StringDump =>
-            $@"string values: [{string.Join(", ", _instance.Value._strings)}]
+            $@"string values: [{string.Join(", ", _instance.Value._strings.Select(x => x ?? "|Empty|"))}]
 string refs: [{string.Join(", ", _instance.Value._stringReferenceCounts)}]
 available string indexes: [{string.Join(", ", _instance.Value._availableStringIndexes)}]";
 
         public static string ListDump =>
-            $@"list values: [{string.Join(", ", _instance.Value._lists)}]
+$@"list values: [{string.Join(", ", _instance.Value._lists.Select(x => x.IsEmpty ? "|Empty|" : x.ToString()))}]
 list refs: [{string.Join(", ", _instance.Value._listReferenceCounts)}]
 available list indexes: [{string.Join(", ", _instance.Value._availableListIndexes)}]";
 
         public static string TupleDump =>
-            $@"tuple values: [{string.Join(", ", _instance.Value._tuples)}]
+$@"tuple values: [{string.Join(", ", _instance.Value._tuples.Select(x => x.IsEmpty ? "|Empty|" : x.ToString()))}]
 tuple refs: [{string.Join(", ", _instance.Value._tupleReferenceCounts)}]
 available tuple indexes: [{string.Join(", ", _instance.Value._availableTupleIndexes)}]";
 
         public static string ExpressionDump(IExecutionContext context) =>
-            $@"expression values: [{string.Join(", ", _instance.Value._expressions.Select(x => x.Evaluate(context)))}]
+$@"expression values: [{string.Join(", ", _instance.Value._expressions.Select(x => x.Type == Types.Error ? "|Empty|" : x.Evaluate(context).ToString()))}]
 expression refs: [{string.Join(", ", _instance.Value._expressionReferenceCounts)}]
 available expression indexes: [{string.Join(", ", _instance.Value._availableExpressionIndexes)}]";
 
         public static string RefCountDump =>
-            $@"string refs: [{string.Join(", ", _instance.Value._stringReferenceCounts)}]
+$@"string refs: [{string.Join(", ", _instance.Value._stringReferenceCounts)}]
 list refs: [{string.Join(", ", _instance.Value._listReferenceCounts)}]
 tuple refs: [{string.Join(", ", _instance.Value._tupleReferenceCounts)}]
 expression refs: [{string.Join(", ", _instance.Value._expressionReferenceCounts)}]";

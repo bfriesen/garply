@@ -12,6 +12,8 @@ namespace Garply
             _items = items;
         }
 
+        public bool IsEmpty => _items == null || _items.Length == 0;
+
         public IReadOnlyList<Value> Items => _items;
 
         public override string ToString()
