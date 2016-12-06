@@ -24,15 +24,14 @@
             return new Instruction(Opcode.LoadBoolean, new Value(value));
         }
 
-        public static Instruction LoadString(long id, IMetadataDatabase metadataDatabase)
-        {
-            var value = metadataDatabase.LoadString(id);
-            return new Instruction(Opcode.LoadString, value);
-        }
-
         public static Instruction LoadType(Types type)
         {
             return new Instruction(Opcode.LoadType, new Value(type));
+        }
+
+        public static Instruction LoadString(int id)
+        {
+            return new Instruction(Opcode.LoadString, new Value(Types.String, id));
         }
 
         public static new Instruction GetType()
@@ -83,16 +82,6 @@
         public static Instruction ListTail()
         {
             return new Instruction(Opcode.ListTail);
-        }
-
-        public static Instruction PushArg()
-        {
-            return new Instruction(Opcode.PushArg);
-        }
-
-        public static Instruction Return()
-        {
-            return new Instruction(Opcode.Return);
         }
     }
 }

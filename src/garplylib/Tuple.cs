@@ -1,9 +1,8 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics;
+using System.Text;
 
 namespace Garply
 {
-    [DebuggerDisplay("{DebuggerDisplay,nq}")]
     public struct Tuple
     {
         private readonly Value[] _items;
@@ -15,6 +14,20 @@ namespace Garply
 
         public IReadOnlyList<Value> Items => _items;
 
-        internal string DebuggerDisplay => $"tuple({_items.Length})";
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+            sb.Append('(');
+            if (_items != null)
+            {
+                for (int i = 0; i < _items.Length; i++)
+                {
+                    if (i > 0) sb.Append(',');
+                    sb.Append(_items[i].ToString());
+                }
+            }
+            sb.Append(')');
+            return sb.ToString();
+        }
     }
 }

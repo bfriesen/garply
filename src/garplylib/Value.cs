@@ -4,8 +4,7 @@ using System.IO;
 
 namespace Garply
 {
-    [DebuggerDisplay("{DebuggerDisplay,nq}")]
-    public struct Value
+    public struct Value : IEquatable<Value>
     {
         private const byte _true = 1;
         private const byte _false = 0;
@@ -43,7 +42,7 @@ namespace Garply
             Raw = (uint)value;
         }
 
-        public void Write(Opcode opcode, BinaryWriter writer, IMetadataDatabase metadataDatabase)
+        public void Write(Opcode opcode, BinaryWriter writer)
         {
             switch (Type)
             {
@@ -63,33 +62,37 @@ namespace Garply
                         }
                         break;
                     }
-                case Types.List: writer.Write(Raw); break;
-                case Types.String: writer.Write(metadataDatabase.GetStringId(Heap.GetString((int)Raw))); break;
-                case Types.Tuple: writer.Write(Raw); break;
                 case Types.Type: writer.Write((uint)Raw); break;
+                case Types.String:
+                case Types.Tuple:
+                case Types.List:
+                case Types.Expression: writer.Write(Raw); break;
+
                 default: Debug.Fail($"Unknown/unwritable type: {Type}"); break;
             }
         }
 
-        internal string DebuggerDisplay
+        public override string ToString()
         {
-            get
+            switch (Type)
             {
-                if (Type == Types.Error) return "<Empty>";
-                string valueString;
-                switch (Type)
-                {
-                    case Types.Boolean: valueString = (Raw != 0).ToString(); break;
-                    case Types.Float: valueString = BitConverter.Int64BitsToDouble(Raw).ToString(); break;
-                    case Types.Integer: valueString = Raw.ToString(); break;
-                    case Types.String: valueString = Heap.GetString((int)Raw); break;
-                    case Types.Tuple: valueString = Heap.GetTuple((int)Raw).DebuggerDisplay; break;
-                    case Types.List: valueString = Heap.GetList((int)Raw).DebuggerDisplay; break;
-                    case Types.Type: valueString = ((Types)(uint)Raw).ToString(); break;
-                    default: return $"Unknown Type: {Type}";
-                }
-                return $"({Type}) {valueString}";
+                case Types.Error: return "{Error}";
+                case Types.Boolean: return Raw == 0 ? "false" : "true";
+                case Types.Float: return BitConverter.Int64BitsToDouble(Raw).ToString();
+                case Types.Integer: return Raw.ToString();
+                case Types.String: return $@"""{Heap.GetString((int)Raw).Replace(@"""", @"""""")}""";
+                case Types.Tuple: return Heap.GetTuple((int)Raw).ToString();
+                case Types.List: return Heap.GetList((int)Raw).ToString();
+                case Types.Type: return $"<{((Types)(uint)Raw).ToString()}>";
+                case Types.Expression: return Heap.GetExpression((int)Raw).ToString();
+                default: return $"Unknown Type: {Type}";
             }
         }
+
+        public override int GetHashCode() => unchecked((Raw.GetHashCode() * 397) ^ Type.GetHashCode());
+        public override bool Equals(object obj) => obj is Value && Equals((Value)obj);
+        public bool Equals(Value other) => Raw == other.Raw && Type == other.Type;
+        public static bool operator ==(Value lhs, Value rhs) => lhs.Equals(rhs);
+        public static bool operator !=(Value lhs, Value rhs) => !lhs.Equals(rhs);
     }
 }

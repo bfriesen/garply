@@ -12,47 +12,56 @@ namespace Garply
 
         private Instruction[] _instructions;
 
-        public Expression(Instruction[] instructions)
+        public Expression(Types type, Instruction[] instructions)
         {
+            Type = type;
             _instructions = instructions;
         }
+
+        public Types Type { get; }
 
         public IReadOnlyList<Instruction> Instructions
         {
             get { return _instructions ?? (_instructions = _emptyInstructions); }
         }
 
-        public static Expression Read(Stream stream, IMetadataDatabase metadataDatabase)
+        public bool IsEmpty => _instructions == null || _instructions.Length == 0;
+
+        public static Expression Read(Stream stream)
         {
             using (var reader = new BinaryReader(stream, Encoding.UTF8, true))
             {
                 var expression = new ExpressionBuilder();
 
-                var instructionCount = reader.ReadInt32();
+                var expressionType = (Types)reader.ReadUInt32();
+                expression.SetType(expressionType);
 
+                var instructionCount = reader.ReadInt32();
                 for (int i = 0; i < instructionCount; i++)
                 {
-                    expression.Add(Instruction.Read(stream, metadataDatabase));
+                    expression.Add(Instruction.Read(stream));
                 }
 
                 return expression.Build();
             }
         }
 
-        public void Write(BinaryWriter writer, IMetadataDatabase metadataDatabase)
+        public void Write(BinaryWriter writer)
         {
+            writer.Write((uint)Type);
             writer.Write(_instructions.Length);
 
             for (int i = 0; i < _instructions.Length; i++)
             {
-                _instructions[i].Write(writer, metadataDatabase);
+                _instructions[i].Write(writer);
             }
         }
 
         public Value Evaluate(IExecutionContext context)
         {
-            var arg = context.Pop();
-            Heap.IncrementRefCount(arg);
+            if (IsEmpty) return default(Value);
+
+            var originalSize = context.Size;
 
             for (int i = 0; i < _instructions.Length; i++)
             {
@@ -159,22 +168,26 @@ namespace Garply
                             context.Push(tail);
                             break;
                         }
-                    case Opcode.PushArg:
-                        {
-                            context.Push(arg);
-                            break;
-                        }
-                    case Opcode.Return:
-                        {
-                            var returnValue = context.Pop();
-                            Heap.IncrementRefCount(returnValue);
-                            Heap.DecrementRefCount(arg);
-                            return returnValue;
-                        }
                 }
             }
 
-            throw new InvalidOperationException("FATAL: No return instruction was encountered");
+            if (context.Size == 0)
+            {
+                context.AddError(new Error($"Invalid expression - evaluation stack was empty upon exit."));
+                return default(Value);
+            }
+
+            var returnValue = context.Pop();
+
+            if (context.Size != originalSize)
+            {
+                context.AddError(new Error($"Invalid expression - evaluation stack size was modified. Original size: {originalSize}, size upon exist: {context.Size}."));
+                return default(Value);
+            }
+
+            return returnValue;
         }
+
+        public override string ToString() => $"Expression<{Type}>";
     }
 }

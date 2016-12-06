@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
 
 namespace Garply
 {
-    [DebuggerDisplay("{DebuggerDisplay,nq}")]
     public struct Instruction
     {
         public const byte MarkerByte1 = 251;
@@ -28,7 +26,7 @@ namespace Garply
         public Opcode Opcode { get; }
         public Value Operand { get; }
 
-        public static Instruction Read(Stream stream, IMetadataDatabase metadataDatabase)
+        public static Instruction Read(Stream stream)
         {
             Opcode opcode;
             var b = stream.ReadByte();
@@ -61,8 +59,6 @@ namespace Garply
             switch (opcode)
             {
                 case Opcode.Nop:
-                case Opcode.PushArg:
-                case Opcode.Return:
                 case Opcode.GetType:
                 case Opcode.TypeIs:
                 case Opcode.TypeEquals:
@@ -77,10 +73,6 @@ namespace Garply
                     var booleanValue = BitConverter.ToBoolean(operandData, 0);
                     operand = new Value(booleanValue);
                     break;
-                case Opcode.LoadString:
-                    var stringId = BitConverter.ToInt64(operandData, 0);
-                    operand = metadataDatabase.LoadString(stringId);
-                    break;
                 case Opcode.LoadInteger:
                     var integerValue = BitConverter.ToInt64(operandData, 0);
                     operand = new Value(integerValue);
@@ -93,10 +85,10 @@ namespace Garply
                     var type = (Types)BitConverter.ToUInt32(operandData, 0);
                     operand = new Value(type);
                     break;
-                //    var type = (Types)BitConverter.ToUInt32(operandData, 0);
-                //    operand = new Value(TypeValue.Get(type), true);
-                //    Debug.Assert(operand.Type != Types.Error);
-                //    break;
+                case Opcode.LoadString:
+                    var stringId = BitConverter.ToInt32(operandData, 0);
+                    operand = new Value(Types.String, stringId);
+                    break;
                 case Opcode.NewTuple:
                     var arity = operandData[0];
                     operand = new Value(arity);
@@ -112,7 +104,7 @@ namespace Garply
             return new Instruction(opcode, operand);
         }
 
-        public void Write(BinaryWriter writer, IMetadataDatabase metadataDatabase)
+        public void Write(BinaryWriter writer)
         {
             if ((ushort)Opcode < 256)
             {
@@ -124,9 +116,16 @@ namespace Garply
                 writer.Write((byte)((ushort)Opcode & 0xFF));
             }
 
-            Operand.Write(Opcode, writer, metadataDatabase);
+            Operand.Write(Opcode, writer);
         }
 
-        internal string DebuggerDisplay => $"{Opcode}:{Operand.DebuggerDisplay}";
+        public override string ToString()
+        {
+            if (Operand.Type == Types.Error)
+            {
+                return Opcode.ToString();
+            }
+            return $"{Opcode}:{Operand.ToString()}";
+        }
     }
 }
