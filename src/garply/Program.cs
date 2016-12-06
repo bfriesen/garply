@@ -23,21 +23,18 @@ namespace Garply
 
             Console.Clear();
 
-            string line;
             while (true)
             {
                 Console.Write("garply> ");
+                string line;
                 switch (line = Console.ReadLine().Trim())
                 {
                     case "": continue;
                     case ":q": return;
                     case ":c": Console.Clear(); continue;
-                    case ":h":
+                    case ":d":
                         Console.WriteLine();
-                        Console.WriteLine(Heap.StringDump);
-                        Console.WriteLine(Heap.ListDump);
-                        Console.WriteLine(Heap.TupleDump);
-                        Console.WriteLine(Heap.ExpressionDump(executionContext));
+                        Console.WriteLine(Heap.Dump);
                         Console.WriteLine();
                         continue;
                 }

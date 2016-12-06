@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading;
 
 namespace Garply
@@ -300,30 +301,42 @@ namespace Garply
             }
         }
 
-        public static string StringDump =>
-            $@"string values: [{string.Join(", ", _instance.Value.Strings.Select(x => x ?? "|Empty|"))}]
-string refs: [{string.Join(", ", _instance.Value.StringReferenceCounts)}]
-available string indexes: [{string.Join(", ", _instance.Value.AvailableStringIndexes)}]";
+        public static string Dump
+        {
+            get
+            {
+                var sb = new StringBuilder();
 
-        public static string ListDump =>
-$@"list values: [{string.Join(", ", _instance.Value.Lists.Select(x => x.IsEmpty ? "|Empty|" : x.ToString()))}]
-list refs: [{string.Join(", ", _instance.Value.ListReferenceCounts)}]
-available list indexes: [{string.Join(", ", _instance.Value.AvailableListIndexes)}]";
+                sb.Append("Strings[")
+                    .Append(string.Join(", ",
+                        _instance.Value.Strings.Select((s, i) => new { s, i })
+                            .Zip(_instance.Value.StringReferenceCounts,
+                            (x, c) => $"({c},{x.s ?? "|Empty|"},{_instance.Value.AvailableStringIndexes.Contains(x.i)})")))
+                    .AppendLine("]");
 
-        public static string TupleDump =>
-$@"tuple values: [{string.Join(", ", _instance.Value.Tuples.Select(x => x.IsEmpty ? "|Empty|" : x.ToString()))}]
-tuple refs: [{string.Join(", ", _instance.Value.TupleReferenceCounts)}]
-available tuple indexes: [{string.Join(", ", _instance.Value.AvailableTupleIndexes)}]";
+                sb.Append("Tuples[")
+                    .Append(string.Join(", ",
+                        _instance.Value.Tuples.Select((t, i) => new { t, i })
+                            .Zip(_instance.Value.TupleReferenceCounts,
+                            (x, c) => $"({c},{(x.t.IsEmpty ? "|Empty|" : x.t.ToString())},{_instance.Value.AvailableTupleIndexes.Contains(x.i)})")))
+                    .AppendLine("]");
 
-        public static string ExpressionDump(IExecutionContext context) =>
-$@"expression values: [{string.Join(", ", _instance.Value.Expressions.Select(x => x.Type == Types.Error ? "|Empty|" : x.Evaluate(context).ToString()))}]
-expression refs: [{string.Join(", ", _instance.Value.ExpressionReferenceCounts)}]
-available expression indexes: [{string.Join(", ", _instance.Value.AvailableExpressionIndexes)}]";
+                sb.Append("Lists[")
+                    .Append(string.Join(", ",
+                        _instance.Value.Lists.Select((l, i) => new { l, i })
+                            .Zip(_instance.Value.ListReferenceCounts,
+                            (x, c) => $"({c},{(x.l.IsEmpty ? "|Empty|" : x.l.ToString())},{_instance.Value.AvailableListIndexes.Contains(x.i)})")))
+                    .AppendLine("]");
 
-        public static string RefCountDump =>
-$@"string refs: [{string.Join(", ", _instance.Value.StringReferenceCounts)}]
-list refs: [{string.Join(", ", _instance.Value.ListReferenceCounts)}]
-tuple refs: [{string.Join(", ", _instance.Value.TupleReferenceCounts)}]
-expression refs: [{string.Join(", ", _instance.Value.ExpressionReferenceCounts)}]";
+                sb.Append("Expressions[")
+                    .Append(string.Join(", ",
+                        _instance.Value.Expressions.Select((e, i) => new { e, i })
+                            .Zip(_instance.Value.ExpressionReferenceCounts,
+                            (x, c) => $"({c},{(x.e.IsEmpty ? "|Empty|" : x.e.ToString())},{_instance.Value.AvailableExpressionIndexes.Contains(x.i)})")))
+                    .Append(']');
+
+                return sb.ToString();
+            }
+        }
     }
 }
