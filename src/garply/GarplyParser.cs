@@ -196,17 +196,17 @@ namespace Garply
                 from openParen in Parse.Char('(')
                 from items in Parse.Ref(() => _mainParser.Parser).DelimitedBy(Parse.Char(',').Token())
                 from closeParen in Parse.Char(')')
-                select AllocateExpression(Types.Tuple,
-                    GetTupleLiteralCreationInstructions(items as IList<Value> ?? items.ToList()));
+                select AllocateExpression(Types.Tuple, GetTupleLiteralCreationInstructions(items));
             return tupleParser;
         }
 
-        private Instruction[] GetTupleLiteralCreationInstructions(IList<Value> items)
+        private Instruction[] GetTupleLiteralCreationInstructions(IEnumerable<Value> items)
         {
-            var arity = items.Count;
+            var arity = 0;
             var instructions = new List<Instruction>();
             foreach (var item in items)
             {
+                arity++;
                 Debug.Assert(item.Type == Types.Expression);
                 instructions.AddRange(Heap.GetExpression((int)item.Raw).Instructions);
                 item.RemoveRef();
@@ -225,18 +225,17 @@ namespace Garply
                     from w2 in Parse.WhiteSpace.Many()
                     select c)
                 from closeParen in Parse.Char(']')
-                select AllocateExpression(Types.List, GetListLiteralCreationInstructions(items as IList<Value> ?? items.ToList()));
+                select AllocateExpression(Types.List, GetListLiteralCreationInstructions(items));
 
             return tupleParser;
         }
 
-        private Instruction[] GetListLiteralCreationInstructions(IList<Value> items)
+        private Instruction[] GetListLiteralCreationInstructions(IEnumerable<Value> items)
         {
             var instructions = new List<Instruction>();
             instructions.Add(new Instruction(Opcode.ListEmpty));
-            for (int i = items.Count - 1; i >= 0; i--)
+            foreach (var expressionValue in items.Reverse())
             {
-                var expressionValue = items[i];
                 Debug.Assert(expressionValue.Type == Types.Expression);
                 instructions.AddRange(Heap.GetExpression((int)expressionValue.Raw).Instructions);
                 instructions.Add(new Instruction(Opcode.ListAdd));
