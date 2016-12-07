@@ -56,7 +56,7 @@ namespace Garply
             }
         }
 
-        public Value Evaluate(IExecutionContext context)
+        public Value Evaluate(ExecutionContext context)
         {
             if (IsEmpty) return default(Value);
 

@@ -34,7 +34,7 @@ namespace Garply
                             var value = Heap.GetExpression((int)parseResult.Raw).Evaluate(executionContext);
                             if (value.Type == Types.Error)
                             {
-                                var error = executionContext.GetError();
+                                var error = executionContext.TakeErrors();
                                 Console.WriteLine(error.ToString());
                                 error.RemoveRef();
                             }
@@ -45,7 +45,7 @@ namespace Garply
                         }
                     case Types.Error:
                         {
-                            var error = executionContext.GetError();
+                            var error = executionContext.TakeErrors();
                             Console.WriteLine(error.ToString());
                             error.RemoveRef();
                             break;
