@@ -1,11 +1,11 @@
 ﻿using System;
 
-namespace Garply.SpracheLib
+namespace Garply.Sprache
 {
     /// <summary>
     /// Represents an error that occurs during parsing.
     /// </summary>
-    public class ParseException : Exception
+    internal class ParseException : Exception
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="ParseException" /> class.

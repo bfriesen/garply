@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Garply.SpracheLib
+namespace Garply.Sprache
 {
     internal static class StringExtensions
     {

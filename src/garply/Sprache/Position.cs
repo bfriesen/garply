@@ -1,11 +1,11 @@
 ﻿using System;
 
-namespace Garply.SpracheLib
+namespace Garply.Sprache
 {
     /// <summary>
     /// Represents a position in the input.
     /// </summary>
-    public class Position : IEquatable<Position>
+    internal class Position : IEquatable<Position>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="Position" /> class.

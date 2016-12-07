@@ -1,4 +1,4 @@
-﻿namespace Garply.SpracheLib
+﻿namespace Garply.Sprache
 {
     using System;
     using System.Collections.Generic;

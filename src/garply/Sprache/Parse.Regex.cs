@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text.RegularExpressions;
 
-namespace Garply.SpracheLib
+namespace Garply.Sprache
 {
     partial class Parse
     {

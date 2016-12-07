@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Garply.SpracheLib
+namespace Garply.Sprache
 {
     interface IComment
     {

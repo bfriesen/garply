@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Garply.SpracheLib
+namespace Garply.Sprache
 {
     internal static class ResultHelper
     {

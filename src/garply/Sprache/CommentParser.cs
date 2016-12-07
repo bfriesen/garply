@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Garply.SpracheLib
+namespace Garply.Sprache
 {
     /// <summary>
     /// Constructs customizable comment parsers.
     /// </summary>
-    public class CommentParser : IComment
+    internal class CommentParser : IComment
     {
         ///<summary>
         ///Single-line comment header.

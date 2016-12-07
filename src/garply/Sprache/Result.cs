@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Garply.SpracheLib
+namespace Garply.Sprache
 {
     /// <summary>
     /// Contains helper functions to create <see cref="IResult&lt;T&gt;"/> instances.
     /// </summary>
-    public static class Result
+    internal static class Result
     {
         /// <summary>
         /// Creates a success result.
