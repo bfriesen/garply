@@ -2,16 +2,12 @@
 
 namespace Garply
 {
-    internal class ErrorContext : IErrorContext
+    internal class ErrorContext
     {
         private readonly Queue<Error> _errors = new Queue<Error>();
+        public void AddError(Error error) => _errors.Enqueue(error);
 
-        public void AddError(Error error)
-        {
-            _errors.Enqueue(error);
-        }
-
-        public Value GetError()
+        public Value TakeErrors()
         {
             Value errorTuple = default(Value);
             while (_errors.Count > 0)

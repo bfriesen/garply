@@ -9,9 +9,9 @@ namespace Garply
     internal class GarplyParser
     {
         private readonly MainParser _mainParser;
-        private readonly IErrorContext _errorContext;
+        private readonly ErrorContext _errorContext;
 
-        public GarplyParser(IErrorContext errorContext)
+        public GarplyParser(ErrorContext errorContext)
         {
             _mainParser = new MainParser();
             _errorContext = errorContext;

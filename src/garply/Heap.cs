@@ -72,7 +72,7 @@ namespace Garply
             return stringId;
         }
 
-        public static Value AllocateTuple(int arity, IExecutionContext context)
+        public static Value AllocateTuple(int arity, ExecutionContext context)
         {
             var items = new Value[arity];
             for (int i = arity - 1; i >= 0; i--)
