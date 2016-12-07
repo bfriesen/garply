@@ -2,7 +2,7 @@
 
 namespace Garply
 {
-    public class ErrorContext : IErrorContext
+    internal class ErrorContext : IErrorContext
     {
         private readonly Queue<Error> _errors = new Queue<Error>();
 

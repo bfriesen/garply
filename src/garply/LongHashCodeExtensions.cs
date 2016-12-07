@@ -1,6 +1,6 @@
 ﻿namespace Garply
 {
-    public static class LongHashCodeExtensions
+    internal static class LongHashCodeExtensions
     {
         private const long _prime = 1251953;
         private const long _stringSeed = 0x542c2caa6d8770ef;

@@ -4,7 +4,7 @@ using System.IO;
 
 namespace Garply
 {
-    public struct Value : IEquatable<Value>
+    internal struct Value : IEquatable<Value>
     {
         private const byte _true = 1;
         private const byte _false = 0;

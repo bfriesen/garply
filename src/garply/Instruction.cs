@@ -3,7 +3,7 @@ using System.IO;
 
 namespace Garply
 {
-    public struct Instruction
+    internal struct Instruction
     {
         public const byte MarkerByte1 = 251;
         public const byte MarkerByte2 = 252;

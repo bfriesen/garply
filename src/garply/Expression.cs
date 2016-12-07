@@ -1,12 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
 
 namespace Garply
 {
-    public struct Expression
+    internal struct Expression
     {
         private static readonly Instruction[] _emptyInstructions = new Instruction[0];
 

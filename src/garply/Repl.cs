@@ -2,7 +2,7 @@
 
 namespace Garply
 {
-    public static class Repl
+    internal static class Repl
     {
         public static void Start()
         {

@@ -1,6 +1,6 @@
 ﻿namespace Garply
 {
-    public class Error
+    internal class Error
     {
         public Error(string message)
         {

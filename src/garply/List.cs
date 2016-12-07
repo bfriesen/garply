@@ -2,7 +2,7 @@
 
 namespace Garply
 {
-    public struct List
+    internal struct List
     {
         public readonly Value Head;
         public readonly int TailIndex;

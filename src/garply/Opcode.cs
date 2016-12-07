@@ -1,6 +1,6 @@
 ﻿namespace Garply
 {
-    public enum Opcode : ushort
+    internal enum Opcode : ushort
     {
         Nop,
         GetType,

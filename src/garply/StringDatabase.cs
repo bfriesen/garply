@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 
 namespace Garply
 {
-    public static class StringDatabase
+    internal static class StringDatabase
     {
         private static readonly ConcurrentDictionary<long, string> _strings = new ConcurrentDictionary<long, string>();
 
