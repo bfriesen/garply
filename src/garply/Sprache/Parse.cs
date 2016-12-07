@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 
-namespace Garply.SpracheLib
+namespace Garply.Sprache
 {
     /// <summary>
     /// Parsers and combinators.
     /// </summary>
-    public static partial class Parse
+    internal static partial class Parse
     {
         /// <summary>
         /// TryParse a single character matching 'predicate'

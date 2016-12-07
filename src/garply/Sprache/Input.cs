@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Garply.SpracheLib
+namespace Garply.Sprache
 {
     /// <summary>
     /// Represents an input for parsing.
     /// </summary>
-    public class Input : IInput
+    internal class Input : IInput
     {
         private readonly string _source;
         private readonly int _position;

@@ -1,12 +1,12 @@
 ﻿using System.Collections.Generic;
 
-namespace Garply.SpracheLib
+namespace Garply.Sprache
 {
     /// <summary>
     /// Represents a parsing result.
     /// </summary>
     /// <typeparam name="T">The result type.</typeparam>
-    public interface IResult<out T>
+    internal interface IResult<out T>
     {
         /// <summary>
         /// Gets the resulting value.

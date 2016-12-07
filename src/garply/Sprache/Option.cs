@@ -1,12 +1,12 @@
 ﻿using System;
 
-namespace Garply.SpracheLib
+namespace Garply.Sprache
 {
     /// <summary>
     /// Represents an optional result.
     /// </summary>
     /// <typeparam name="T">The result type.</typeparam>
-    public interface IOption<out T>
+    internal interface IOption<out T>
     {
         /// <summary>
         /// Gets a value indicating whether this instance is empty.
@@ -33,7 +33,7 @@ namespace Garply.SpracheLib
     /// <summary>
     /// Extensions for <see cref="IOption&lt;T&gt;"/>.
     /// </summary>
-    public static class OptionExtensions
+    internal static class OptionExtensions
     {
         /// <summary>
         /// Gets the value or else returns a default value.

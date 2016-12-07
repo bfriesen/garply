@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Garply.SpracheLib
+namespace Garply.Sprache
 {
     /// <summary>
     /// Represents an input for parsing.
     /// </summary>
-    public interface IInput : IEquatable<IInput>
+    internal interface IInput : IEquatable<IInput>
     {
         /// <summary>
         /// Advances the input.
