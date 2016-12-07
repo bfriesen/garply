@@ -2,7 +2,7 @@
 
 namespace Garply
 {
-    public static class OpcodeGetSizeExtension
+    internal static class OpcodeGetSizeExtension
     {
         public static int GetSize(this Opcode opcode)
         {

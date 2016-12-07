@@ -1,6 +1,6 @@
 ﻿namespace Garply
 {
-    public interface IExecutionContext : IErrorContext
+    internal interface IExecutionContext : IErrorContext
     {
         void Push(Value value);
         Value Pop();

@@ -3,7 +3,7 @@ using System.Text;
 
 namespace Garply
 {
-    public struct Tuple
+    internal struct Tuple
     {
         private readonly Value[] _items;
 

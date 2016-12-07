@@ -5,7 +5,7 @@ using System.Threading;
 
 namespace Garply
 {
-    public static  class Heap
+    internal static  class Heap
     {
         private class HeapInstance
         {

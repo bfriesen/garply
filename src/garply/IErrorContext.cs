@@ -1,6 +1,6 @@
 ﻿namespace Garply
 {
-    public interface IErrorContext
+    internal interface IErrorContext
     {
         void AddError(Error error);
         Value GetError();

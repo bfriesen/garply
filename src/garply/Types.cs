@@ -1,6 +1,6 @@
 ﻿namespace Garply
 {
-    public enum Types : uint
+    internal enum Types : uint
     {
         Error      = ( 0x00000000                      )             ,
         Abstract   = ( 0x00000001                      )             ,

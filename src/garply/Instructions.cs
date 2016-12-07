@@ -1,6 +1,6 @@
 ﻿namespace Garply
 {
-    public static class Instructions
+    internal static class Instructions
     {
         private static readonly byte[] _empty = new byte[0];
 

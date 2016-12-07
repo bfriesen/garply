@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Garply
 {
-    public class ExpressionBuilder : IEnumerable
+    internal class ExpressionBuilder : IEnumerable
     {
         public Types Type { get; set; }
         public List<Instruction> Instructions { get; } = new List<Instruction>();

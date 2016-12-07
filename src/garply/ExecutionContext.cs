@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace Garply
 {
-    public class ExecutionContext : IExecutionContext
+    internal class ExecutionContext : IExecutionContext
     {
         private readonly Stack<Value> _evaluationStack = new Stack<Value>();
 
