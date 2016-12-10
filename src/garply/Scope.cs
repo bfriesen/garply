@@ -44,11 +44,6 @@ namespace Garply
             return _variables[index].Value;
         }
 
-        public Value SetValue(ErrorContext errorContext, Value indexValue, Value value, bool isMutable)
-        {
-            return SetValue(errorContext, (int)indexValue.Raw, value, isMutable);
-        }
-
         public Value SetValue(ErrorContext errorContext, int index, Value value, bool isMutable)
         {
             if (_variables[index].Value.Type == Types.Error) // the variable has never been set
@@ -64,7 +59,7 @@ namespace Garply
                 value.AddRef();
                 return value;
             }
-            errorContext.AddError(new Error("Rebinding is not supported."));
+            errorContext.AddError(new Error("Cannot rebind to immutable variable."));
             return default(Value);
         }
 

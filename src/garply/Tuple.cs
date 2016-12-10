@@ -19,7 +19,7 @@ namespace Garply
         public override string ToString()
         {
             var sb = new StringBuilder();
-            sb.Append('(');
+            sb.Append('{');
             if (_items != null)
             {
                 for (int i = 0; i < _items.Length; i++)
@@ -28,7 +28,7 @@ namespace Garply
                     sb.Append(_items[i].ToString());
                 }
             }
-            sb.Append(')');
+            sb.Append('}');
             return sb.ToString();
         }
     }

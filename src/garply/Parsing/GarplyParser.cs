@@ -32,18 +32,30 @@ namespace Garply
             _tryParse = mainParser.TryParse;
         }
 
+        private Parser<VariableDefinition> GetVariableDefinitionParser()
+        {
+            var variableDefinitionParser =
+                from mutableMarker in Parse.Char('$').Once().Optional()
+                from first in Parse.Letter.Once()
+                from rest in Parse.LetterOrDigit.Or(Parse.Chars('_', '-')).Many()
+                select new VariableDefinition
+                {
+                    Name = new string(
+                        mutableMarker.GetOrElse(Enumerable.Empty<char>())
+                            .Concat(first)
+                            .Concat(rest).ToArray()),
+                    Mutable = mutableMarker.IsDefined
+                };
+            return variableDefinitionParser;
+        }
 
         private Parser<Value> GetAssignmentParser(Scope.Builder scopeBuilder)
         {
             var assignmentParser =
-                from mutableMarker in Parse.Char('$').Once().Optional()
-                from variableIdentifier in Parse.LetterOrDigit.Or(Parse.Char('_')).AtLeastOnce()
+                from variableDefinition in GetVariableDefinitionParser()
                 from assignmentOperator in Parse.Char('=').Token()
                 from value in _mainParser
-                let variableName = new string(
-                    mutableMarker.GetOrElse(Enumerable.Empty<char>())
-                        .Concat(variableIdentifier).ToArray())
-                select GetAssignmentExpression(scopeBuilder, variableName, value, mutableMarker.IsDefined);
+                select GetAssignmentExpression(scopeBuilder, variableDefinition.Name, value, variableDefinition.Mutable);
             return assignmentParser;
         }
 
@@ -61,12 +73,8 @@ namespace Garply
         private Parser<Value> GetVariableParser(Scope.Builder scopeBuilder)
         {
             var variableParser =
-                from mutableMarker in Parse.Char('$').Once().Optional()
-                from variableIdentifier in Parse.LetterOrDigit.AtLeastOnce().Text()
-                let variableName = new string(
-                    mutableMarker.GetOrElse(Enumerable.Empty<char>())
-                        .Concat(variableIdentifier).ToArray())
-                let variableIndex = GetVariableIndex(variableName, scopeBuilder)
+                from variableDefinition in GetVariableDefinitionParser()
+                let variableIndex = GetVariableIndex(variableDefinition.Name, scopeBuilder)
                 select variableIndex.Type == Types.Error ? default(Value) :
                     AllocateExpression(Types.Any, new[]
                     {
@@ -260,9 +268,9 @@ namespace Garply
         private Parser<Value> GetTupleLiteralParser()
         {
             var tupleParser =
-                from openParen in Parse.Char('(')
+                from openParen in Parse.Char('{')
                 from items in _mainParser.DelimitedBy(Parse.Char(',').Token())
-                from closeParen in Parse.Char(')')
+                from closeParen in Parse.Char('}')
                 select GetCreateTupleExpression(items);
             return tupleParser;
         }
@@ -335,6 +343,12 @@ namespace Garply
         private IEnumerable<T> Once<T>(T t, bool condition = true)
         {
             if (condition) yield return t;
+        }
+
+        private class VariableDefinition
+        {
+            public string Name { get; set; }
+            public bool Mutable { get; set; }
         }
     }
 }
