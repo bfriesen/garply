@@ -29,28 +29,26 @@ namespace Garply
 
         private static readonly ThreadLocal<HeapInstance> _instance = new ThreadLocal<HeapInstance>(() => new HeapInstance());
 
-        public static Value AllocateString(string rawValue, bool constant)
+        public static Value AllocateString(string rawValue)
         {
             var instance = _instance.Value;
+            var stringId = AllocateString(instance, rawValue);
+            var value = new Value(Types.String, stringId);
+            return value;
+        }
+
+        public static Value AllocatePersistentString(string rawValue)
+        {
+            var instance = _instance.Value;
+            var databaseId = rawValue.GetLongHashCode();
+
             int stringId;
-            if (constant)
-            {
-                var databaseId = rawValue.GetLongHashCode();
-                if (instance.StringIndexLookup.ContainsKey(databaseId))
-                {
-                    stringId = instance.StringIndexLookup[databaseId];
-                }
-                else
-                {
-                    stringId = AllocateString(instance, rawValue);
-                    instance.StringIndexLookup.Add(databaseId, stringId);
-                }
-            }
-            else
+            if (!instance.StringIndexLookup.TryGetValue(databaseId, out stringId))
             {
                 stringId = AllocateString(instance, rawValue);
+                instance.StringIndexLookup.Add(databaseId, stringId);
             }
-            
+
             var value = new Value(Types.String, stringId);
             return value;
         }

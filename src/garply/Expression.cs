@@ -83,7 +83,7 @@ namespace Garply
                         {
                             Debug.Assert(instruction.Operand.Type == Types.String);
                             var rawValue = StringDatabase.GetRawValue(instruction.Operand.Raw);
-                            var value = Heap.AllocateString(rawValue, true);
+                            var value = Heap.AllocatePersistentString(rawValue);
                             context.Push(value);
                             value.AddRef();
                             break;
