@@ -13,7 +13,7 @@ namespace Garply
             TailIndex = tailIndex;
         }
 
-        public bool IsEmpty => Head.Type == Types.Error;
+        public bool IsEmpty => Head.Type == Types.error;
 
         public override string ToString()
         {

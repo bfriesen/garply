@@ -61,7 +61,7 @@ namespace Garply
 
         private Value GetAssignmentExpression(Scope.Builder scopeBuilder, string variableName, Value valueExpression, bool mutable)
         {
-            if (valueExpression.Type == Types.Error) return valueExpression;
+            if (valueExpression.Type == Types.error) return valueExpression;
             var instructions = new List<Instruction>();
             var expression = Heap.GetExpression((int)valueExpression.Raw);
             instructions.AddRange(expression.Instructions);
@@ -75,7 +75,7 @@ namespace Garply
             var variableParser =
                 from variableDefinition in GetVariableDefinitionParser()
                 let variableIndex = GetVariableIndex(variableDefinition.Name, scopeBuilder)
-                select variableIndex.Type == Types.Error ? default(Value) :
+                select variableIndex.Type == Types.error ? default(Value) :
                     AllocateExpression(Types.Any, new[]
                     {
                         Instruction.ReadVariable(variableIndex)
@@ -137,14 +137,14 @@ namespace Garply
         {
             var trueParser =
                 from t in Parse.String("true")
-                select AllocateExpression(Types.Boolean, new Instruction[]
+                select AllocateExpression(Types.@bool, new Instruction[]
                 {
                     Instruction.True()
                 });
 
             var falseParser =
                 from f in Parse.String("false")
-                select AllocateExpression(Types.Boolean, new Instruction[]
+                select AllocateExpression(Types.@bool, new Instruction[]
                 {
                     Instruction.False()
                 });
@@ -158,8 +158,8 @@ namespace Garply
                 from negate in Parse.Char('-').Optional()
                 from digits in Parse.Numeric.AtLeastOnce()
                 let value = ParseLong(digits, negate.IsDefined)
-                select value.Type == Types.Error ? value :
-                    AllocateExpression(Types.Integer, new Instruction[]
+                select value.Type == Types.error ? value :
+                    AllocateExpression(Types.@int, new Instruction[]
                     {
                         Instruction.LoadInteger(value)
                     });
@@ -190,8 +190,8 @@ namespace Garply
                 from dot in Parse.Char('.')
                 from fractionalPart in Parse.Numeric.AtLeastOnce()
                 let value = ParseFloat(wholePart, fractionalPart, negate.IsDefined)
-                select value.Type == Types.Error ? value :
-                    AllocateExpression(Types.Float, new Instruction[]
+                select value.Type == Types.error ? value :
+                    AllocateExpression(Types.@float, new Instruction[]
                     {
                         Instruction.LoadFloat(value)
                     });
@@ -236,7 +236,7 @@ namespace Garply
                 from openBrace in Parse.Char('<')
                 from type in typeParser
                 from closeBrace in Parse.Char('>')
-                select AllocateExpression(Types.Type, new Instruction[]
+                select AllocateExpression(Types.type, new Instruction[]
                 {
                     Instruction.LoadType(type)
                 });
@@ -251,7 +251,7 @@ namespace Garply
                     .Or(Parse.CharExcept('"'))
                     .Many().Text()
                 from closeQuote in Parse.Char('"')
-                select AllocateExpression(Types.String, GetStringLiteralRetreivalInstructions(value));
+                select AllocateExpression(Types.@string, GetStringLiteralRetreivalInstructions(value));
 
             return stringParser;
         }
@@ -282,18 +282,18 @@ namespace Garply
             using (var enumerator = itemExpressionValues.GetEnumerator()) while (enumerator.MoveNext())
             {
                 var itemExpressionValue = enumerator.Current;
-                if (itemExpressionValue.Type == Types.Error)
+                if (itemExpressionValue.Type == Types.error)
                 {
                     while (enumerator.MoveNext()) enumerator.Current.RemoveRef();
                     return itemExpressionValue;
                 }
                 arity++;
-                Debug.Assert(itemExpressionValue.Type == Types.Expression);
+                Debug.Assert(itemExpressionValue.Type == Types.expression);
                 instructions.AddRange(Heap.GetExpression((int)itemExpressionValue.Raw).Instructions);
                 itemExpressionValue.RemoveRef();
             }
             instructions.Add(Instruction.NewTuple(arity));
-            var expressionValue = AllocateExpression(Types.Tuple, instructions.ToArray());
+            var expressionValue = AllocateExpression(Types.tuple, instructions.ToArray());
             return expressionValue;
         }
 
@@ -319,17 +319,17 @@ namespace Garply
             using (var enumerator = itemExpressionValues.GetEnumerator()) while (enumerator.MoveNext())
             {
                 var itemExpressionValue = enumerator.Current;
-                if (itemExpressionValue.Type == Types.Error)
+                if (itemExpressionValue.Type == Types.error)
                 {
                     while (enumerator.MoveNext()) enumerator.Current.RemoveRef();
                     return itemExpressionValue;
                 }
-                Debug.Assert(itemExpressionValue.Type == Types.Expression);
+                Debug.Assert(itemExpressionValue.Type == Types.expression);
                 instructions.AddRange(Heap.GetExpression((int)itemExpressionValue.Raw).Instructions);
                 instructions.Add(Instruction.ListAdd());
                 itemExpressionValue.RemoveRef();
             }
-            var expressionValue = AllocateExpression(Types.List, instructions.ToArray());
+            var expressionValue = AllocateExpression(Types.list, instructions.ToArray());
             return expressionValue;
         }
 

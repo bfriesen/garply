@@ -37,10 +37,10 @@ namespace Garply
                 }
                 switch (parseResult.Type)
                 {
-                    case Types.Expression:
+                    case Types.expression:
                         {
                             var value = Heap.GetExpression((int)parseResult.Raw).Evaluate(executionContext);
-                            if (value.Type == Types.Error)
+                            if (value.Type == Types.error)
                             {
                                 var error = executionContext.TakeErrors();
                                 Console.WriteLine(error.ToString());
@@ -51,7 +51,7 @@ namespace Garply
                             parseResult.RemoveRef();
                             break;
                         }
-                    case Types.Error:
+                    case Types.error:
                         {
                             var error = executionContext.TakeErrors();
                             Console.WriteLine(error.ToString());

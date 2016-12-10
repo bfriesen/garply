@@ -46,7 +46,7 @@ namespace Garply
 
         public Value SetValue(ErrorContext errorContext, int index, Value value, bool isMutable)
         {
-            if (_variables[index].Value.Type == Types.Error) // the variable has never been set
+            if (_variables[index].Value.Type == Types.error) // the variable has never been set
             {
                 _variables[index] = new Variable(value, isMutable);
                 value.AddRef();

@@ -13,7 +13,7 @@
         public static Instruction LoadBoolean(Value boolValue) => new Instruction(Opcode.LoadBoolean, boolValue);
         public static Instruction LoadType(Types type) => LoadType(new Value(type));
         public static Instruction LoadType(Value typeValue) => new Instruction(Opcode.LoadType, typeValue);
-        public static Instruction LoadString(long id) => LoadString(new Value(Types.String, id));
+        public static Instruction LoadString(long id) => LoadString(new Value(Types.@string, id));
         public static Instruction LoadString(Value stringValue) => new Instruction(Opcode.LoadString, stringValue);
         public static new Instruction GetType() => new Instruction(Opcode.GetType);
         public static Instruction TypeIs() => new Instruction(Opcode.TypeIs);

@@ -10,7 +10,7 @@ namespace Garply
         {
             var key = rawValue.GetLongHashCode();
             _strings.TryAdd(key, rawValue);
-            return new Value(Types.String, key);
+            return new Value(Types.@string, key);
         }
 
         public static string GetRawValue(long id)

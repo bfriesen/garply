@@ -82,7 +82,7 @@ namespace Garply
                         }
                     case Opcode.LoadString:
                         {
-                            Debug.Assert(instruction.Operand.Type == Types.String);
+                            Debug.Assert(instruction.Operand.Type == Types.@string);
                             var rawValue = StringDatabase.GetRawValue(instruction.Operand.Raw);
                             var value = Heap.AllocatePersistentString(rawValue);
                             context.Push(value);
@@ -100,11 +100,11 @@ namespace Garply
                     case Opcode.TypeIs:
                         {
                             var rhsValue = context.Pop();
-                            Debug.Assert(rhsValue.Type == Types.Type);
+                            Debug.Assert(rhsValue.Type == Types.type);
                             var rhsType = (Types)(uint)rhsValue.Raw;
 
                             var lhsValue = context.Pop();
-                            Debug.Assert(lhsValue.Type == Types.Type);
+                            Debug.Assert(lhsValue.Type == Types.type);
                             var lhsType = (Types)(uint)lhsValue.Raw;
 
                             var lhsTypeIsRhsType = (lhsType & rhsType) != 0 && lhsType >= rhsType;
@@ -114,11 +114,11 @@ namespace Garply
                     case Opcode.TypeEquals:
                         {
                             var rhsValue = context.Pop();
-                            Debug.Assert(rhsValue.Type == Types.Type);
+                            Debug.Assert(rhsValue.Type == Types.type);
                             var rhsType = (Types)(uint)rhsValue.Raw;
 
                             var lhsValue = context.Pop();
-                            Debug.Assert(lhsValue.Type == Types.Type);
+                            Debug.Assert(lhsValue.Type == Types.type);
                             var lhsType = (Types)(uint)lhsValue.Raw;
 
                             var lhsTypeEqualsRhsType = lhsType == rhsType;
@@ -128,7 +128,7 @@ namespace Garply
                     case Opcode.TupleArity:
                         {
                             var tupleValue = context.Pop();
-                            Debug.Assert(tupleValue.Type == Types.Tuple);
+                            Debug.Assert(tupleValue.Type == Types.tuple);
                             var tuple = Heap.GetTuple((int)tupleValue.Raw);
                             var arity = tuple.Items.Count;
                             context.Push(new Value(arity));
@@ -182,7 +182,7 @@ namespace Garply
                         {
                             var listValue = context.Pop();
                             var list = Heap.GetList((int)listValue.Raw);
-                            var tail = new Value(Types.List, list.TailIndex);
+                            var tail = new Value(Types.list, list.TailIndex);
                             context.Push(tail);
                             tail.AddRef();
                             listValue.RemoveRef();
@@ -193,7 +193,7 @@ namespace Garply
                             var value = context.Pop();
                             var variableIndex = (int)instruction.Operand.Raw;
                             var result = context.Scope.SetValue(context, variableIndex, value, false);
-                            if (result.Type == Types.Error) return default(Value);
+                            if (result.Type == Types.error) return default(Value);
                             context.Push(result);
                             break;
                         }
@@ -202,15 +202,15 @@ namespace Garply
                             var value = context.Pop();
                             var variableIndex = (int)instruction.Operand.Raw;
                             var result = context.Scope.SetValue(context, variableIndex, value, true);
-                            if (result.Type == Types.Error) return default(Value);
+                            if (result.Type == Types.error) return default(Value);
                             context.Push(result);
                             break;
                         }
                     case Opcode.ReadVariable:
                         {
-                            Debug.Assert(instruction.Operand.Type == Types.Integer);
+                            Debug.Assert(instruction.Operand.Type == Types.@int);
                             var value = context.Scope.GetValue((int)instruction.Operand.Raw);
-                            if (value.Type == Types.Error) return default(Value);
+                            if (value.Type == Types.error) return default(Value);
                             context.Push(value);
                             value.AddRef();
                             break;

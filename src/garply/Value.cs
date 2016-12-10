@@ -20,25 +20,25 @@ namespace Garply
 
         public Value(bool value)
         {
-            Type = Types.Boolean;
+            Type = Types.@bool;
             Raw = value ? 1 : 0;
         }
 
         public Value(long value)
         {
-            Type = Types.Integer;
+            Type = Types.@int;
             Raw = value;
         }
 
         public Value(double value)
         {
-            Type = Types.Float;
+            Type = Types.@float;
             Raw = BitConverter.DoubleToInt64Bits(value);
         }
 
         public Value(Types value)
         {
-            Type = Types.Type;
+            Type = Types.type;
             Raw = (uint)value;
         }
 
@@ -46,10 +46,10 @@ namespace Garply
         {
             switch (Type)
             {
-                case Types.Error: break;
-                case Types.Boolean: writer.Write(Raw == 0 ? _false : _true); break;
-                case Types.Float: writer.Write(BitConverter.Int64BitsToDouble(Raw)); break;
-                case Types.Integer:
+                case Types.error: break;
+                case Types.@bool: writer.Write(Raw == 0 ? _false : _true); break;
+                case Types.@float: writer.Write(BitConverter.Int64BitsToDouble(Raw)); break;
+                case Types.@int:
                     {
                         switch (opcode)
                         {
@@ -62,11 +62,11 @@ namespace Garply
                         }
                         break;
                     }
-                case Types.Type: writer.Write((uint)Raw); break;
-                case Types.String:
-                case Types.Tuple:
-                case Types.List:
-                case Types.Expression: writer.Write(Raw); break;
+                case Types.type: writer.Write((uint)Raw); break;
+                case Types.@string:
+                case Types.tuple:
+                case Types.list:
+                case Types.expression: writer.Write(Raw); break;
 
                 default: Debug.Fail($"Unknown/unwritable type: {Type}"); break;
             }
@@ -76,15 +76,15 @@ namespace Garply
         {
             switch (Type)
             {
-                case Types.Error: return "{Error}";
-                case Types.Boolean: return Raw == 0 ? "false" : "true";
-                case Types.Float: return BitConverter.Int64BitsToDouble(Raw).ToString();
-                case Types.Integer: return Raw.ToString();
-                case Types.String: return $@"""{Heap.GetString((int)Raw).Replace(@"""", @"""""")}""";
-                case Types.Tuple: return Heap.GetTuple((int)Raw).ToString();
-                case Types.List: return Heap.GetList((int)Raw).ToString();
-                case Types.Type: return $"<{((Types)(uint)Raw).ToString()}>";
-                case Types.Expression: return Heap.GetExpression((int)Raw).ToString();
+                case Types.error: return "{Error}";
+                case Types.@bool: return Raw == 0 ? "false" : "true";
+                case Types.@float: return BitConverter.Int64BitsToDouble(Raw).ToString();
+                case Types.@int: return Raw.ToString();
+                case Types.@string: return $@"""{Heap.GetString((int)Raw).Replace(@"""", @"""""")}""";
+                case Types.tuple: return Heap.GetTuple((int)Raw).ToString();
+                case Types.list: return Heap.GetList((int)Raw).ToString();
+                case Types.type: return $"<{((Types)(uint)Raw).ToString()}>";
+                case Types.expression: return Heap.GetExpression((int)Raw).ToString();
                 default: return $"Unknown Type: {Type}";
             }
         }

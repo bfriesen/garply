@@ -68,7 +68,7 @@ namespace Garply
                     break;
                 case Opcode.LoadString:
                     var stringId = BitConverter.ToInt32(operandData, 0);
-                    operand = new Value(Types.String, stringId);
+                    operand = new Value(Types.@string, stringId);
                     break;
                 case Opcode.NewTuple:
                     var arity = operandData[0];
@@ -141,7 +141,7 @@ namespace Garply
 
         public override string ToString()
         {
-            if (Operand.Type == Types.Error)
+            if (Operand.Type == Types.error)
             {
                 return Opcode.ToString();
             }

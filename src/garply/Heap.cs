@@ -33,7 +33,7 @@ namespace Garply
         {
             var instance = _instance.Value;
             var stringId = AllocateString(instance, rawValue);
-            var value = new Value(Types.String, stringId);
+            var value = new Value(Types.@string, stringId);
             return value;
         }
 
@@ -49,7 +49,7 @@ namespace Garply
                 instance.StringIndexLookup.Add(databaseId, stringId);
             }
 
-            var value = new Value(Types.String, stringId);
+            var value = new Value(Types.@string, stringId);
             return value;
         }
 
@@ -96,7 +96,7 @@ namespace Garply
                 instance.Tuples.Add(tuple);
                 instance.TupleReferenceCounts.Add(0);
             }
-            var value = new Value(Types.Tuple, tupleId);
+            var value = new Value(Types.tuple, tupleId);
             return value;
         }
 
@@ -127,7 +127,7 @@ namespace Garply
                 instance.Lists.Add(list);
                 instance.ListReferenceCounts.Add(0);
             }
-            var value = new Value(Types.List, listId);
+            var value = new Value(Types.list, listId);
             return value;
         }
 
@@ -147,7 +147,7 @@ namespace Garply
                 instance.Expressions.Add(expression);
                 instance.ExpressionReferenceCounts.Add(0);
             }
-            var value = new Value(Types.Expression, expressionId);
+            var value = new Value(Types.expression, expressionId);
             return value;
         }
 
@@ -195,16 +195,16 @@ namespace Garply
         {
             switch (value.Type)
             {
-                case Types.String:
+                case Types.@string:
                     _instance.Value.StringReferenceCounts[(int)value.Raw]++;
                     break;
-                case Types.Tuple:
+                case Types.tuple:
                     _instance.Value.TupleReferenceCounts[(int)value.Raw]++;
                     break;
-                case Types.List:
+                case Types.list:
                     _instance.Value.ListReferenceCounts[(int)value.Raw]++;
                     break;
-                case Types.Expression:
+                case Types.expression:
                     _instance.Value.ExpressionReferenceCounts[(int)value.Raw]++;
                     break;
             }
@@ -214,16 +214,16 @@ namespace Garply
         {
             switch (value.Type)
             {
-                case Types.String:
+                case Types.@string:
                     DecrementStringRefCount(value);
                     break;
-                case Types.Tuple:
+                case Types.tuple:
                     DecrementTupleRefCount(value);
                     break;
-                case Types.List:
+                case Types.list:
                     DecrementListRefCount(value);
                     break;
-                case Types.Expression:
+                case Types.expression:
                     DecrementExpressionRefCount(value);
                     break;
             }
