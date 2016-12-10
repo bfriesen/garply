@@ -87,11 +87,11 @@ namespace Garply
                 from negate in Parse.Char('-').Optional()
                 from digits in Parse.Numeric.AtLeastOnce()
                 let value = ParseLong(digits, negate.IsDefined)
-                where value.Type != Types.Error
-                select AllocateExpression(Types.Integer, new Instruction[]
-                {
-                    new Instruction(Opcode.LoadInteger, value)
-                });
+                select value.Type == Types.Error ? value :
+                    AllocateExpression(Types.Integer, new Instruction[]
+                    {
+                        new Instruction(Opcode.LoadInteger, value)
+                    });
 
             return integerParser;
         }
@@ -103,8 +103,10 @@ namespace Garply
             {
                 return new Value(long.Parse(stringValue));
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _errorContext.AddError(new Error(ex.Message));
+                _errorContext.AddError(new Error($"Error parsing int value '{stringValue}'"));
                 return default(Value);
             }
         }
@@ -117,11 +119,11 @@ namespace Garply
                 from dot in Parse.Char('.')
                 from fractionalPart in Parse.Numeric.AtLeastOnce()
                 let value = ParseFloat(wholePart, fractionalPart, negate.IsDefined)
-                where value.Type != Types.Error
-                select AllocateExpression(Types.Float, new Instruction[]
-                {
-                    new Instruction(Opcode.LoadFloat, value)
-                });
+                select value.Type == Types.Error ? value :
+                    AllocateExpression(Types.Float, new Instruction[]
+                    {
+                        new Instruction(Opcode.LoadFloat, value)
+                    });
 
             return integerParser;
         }
@@ -137,8 +139,10 @@ namespace Garply
             {
                 return new Value(double.Parse(stringValue));
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _errorContext.AddError(new Error(ex.Message));
+                _errorContext.AddError(new Error($"Error parsing float value '{stringValue}'"));
                 return default(Value);
             }
         }
