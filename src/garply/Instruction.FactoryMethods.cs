@@ -29,5 +29,7 @@
         public static Instruction ListTail() => new Instruction(Opcode.ListTail);
         public static Instruction AssignVariable(int variableIndex) => AssignVariable(new Value(variableIndex));
         public static Instruction AssignVariable(Value variableIndexValue) => new Instruction(Opcode.AssignVariable, variableIndexValue);
+        public static Instruction ReadVariable(int variableIndex) => ReadVariable(new Value(variableIndex));
+        public static Instruction ReadVariable(Value variableIndexValue) => new Instruction(Opcode.ReadVariable, variableIndexValue);
     }
 }

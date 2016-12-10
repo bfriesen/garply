@@ -9,7 +9,7 @@ namespace Garply
             private readonly Dictionary<string, int> _indexLookup = new Dictionary<string, int>();
             private int _size;
 
-            public int GetIndex(string variableName)
+            public int GetOrCreateIndex(string variableName)
             {
                 int index;
                 if (!_indexLookup.TryGetValue(variableName, out index))
@@ -18,6 +18,11 @@ namespace Garply
                     _indexLookup.Add(variableName, index);
                 }
                 return index;
+            }
+
+            public bool TryGetIndex(string variableName, out int index)
+            {
+                return _indexLookup.TryGetValue(variableName, out index);
             }
 
             public int Size { get { return _size; } }

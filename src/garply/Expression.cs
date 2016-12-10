@@ -196,6 +196,15 @@ namespace Garply
                             context.Push(result);
                             break;
                         }
+                    case Opcode.ReadVariable:
+                        {
+                            Debug.Assert(instruction.Operand.Type == Types.Integer);
+                            var value = context.Scope.GetValue((int)instruction.Operand.Raw);
+                            if (value.Type == Types.Error) return default(Value);
+                            context.Push(value);
+                            value.AddRef();
+                            break;
+                        }
                     default:
                         throw new ArgumentOutOfRangeException("opcode");
                 }

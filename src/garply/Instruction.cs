@@ -79,6 +79,7 @@ namespace Garply
                     operand = new Value(index);
                     break;
                 case Opcode.AssignVariable:
+                case Opcode.ReadVariable:
                     throw new NotImplementedException();
                 default:
                     throw new ArgumentOutOfRangeException("opcode");

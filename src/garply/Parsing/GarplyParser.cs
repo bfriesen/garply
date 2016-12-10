@@ -22,7 +22,7 @@ namespace Garply
             _errorContext = errorContext;
 
             var assignmentParser = GetAssignmentParser(scopeBuilder);
-            var literalParser = GetLiteralExpressionParser();
+            var literalParser = GetLiteralExpressionParser(scopeBuilder);
 
             mainParser =
                 assignmentParser
@@ -50,7 +50,7 @@ namespace Garply
             var instructions = new List<Instruction>();
             var expression = Heap.GetExpression((int)valueExpression.Raw);
             instructions.AddRange(expression.Instructions);
-            instructions.Add(Instruction.AssignVariable(scopeBuilder.GetIndex(variableName)));
+            instructions.Add(Instruction.AssignVariable(scopeBuilder.GetOrCreateIndex(variableName)));
             valueExpression.RemoveRef();
             return AllocateExpression(expression.Type, instructions.ToArray());
         }
@@ -76,7 +76,7 @@ namespace Garply
             }
         }
 
-        private Parser<Value> GetLiteralExpressionParser()
+        private Parser<Value> GetLiteralExpressionParser(Scope.Builder scopeBuilder)
         {
             var booleanParser = GetBooleanLiteralParser();
             var integerParser = GetIntegerLiteralParser();
@@ -85,12 +85,38 @@ namespace Garply
             var stringParser = GetStringLiteralParser();
             var tupleParser = GetTupleLiteralParser();
             var listParser = GetListLiteralParser();
+            var variableParser = GetVariableParser(scopeBuilder);
             // TODO: Expression parser?
 
             var literalParser =
-                booleanParser.Or(floatParser).Or(integerParser).Or(typeParser).Or(stringParser).Or(tupleParser).Or(listParser);
+                booleanParser.Or(floatParser).Or(integerParser).Or(typeParser).Or(stringParser).Or(tupleParser).Or(listParser).Or(variableParser);
 
             return literalParser;
+        }
+
+        private Parser<Value> GetVariableParser(Scope.Builder scopeBuilder)
+        {
+            var variableParser =
+                from marker in Parse.Char('$')
+                from variableName in Parse.LetterOrDigit.AtLeastOnce().Text()
+                let variableIndex = GetVariableIndex(variableName, scopeBuilder)
+                select variableIndex.Type == Types.Error ? default(Value) :
+                    AllocateExpression(Types.Any, new[]
+                    {
+                        Instruction.ReadVariable(variableIndex)
+                    });
+            return variableParser;
+        }
+
+        private Value GetVariableIndex(string variableName, Scope.Builder scopeBuilder)
+        {
+            int index;
+            if (!scopeBuilder.TryGetIndex(variableName, out index))
+            {
+                // TODO: error context?
+                return default(Value);
+            }
+            return new Value(index);
         }
 
         private Parser<Value> GetBooleanLiteralParser()

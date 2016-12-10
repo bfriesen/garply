@@ -15,5 +15,7 @@
         Boolean    = ( 0x00000200 | Value              ) & ~Abstract ,
         Integer    = ( 0x00000400 | Value     | Number ) & ~Abstract ,
         Float      = ( 0x00000800 | Value     | Number ) & ~Abstract ,
+
+        Any        = 0xFFFFFFFF
     }
 }
