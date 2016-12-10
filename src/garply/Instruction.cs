@@ -28,34 +28,15 @@ namespace Garply
 
         public static Instruction Read(Stream stream)
         {
-            Opcode opcode;
-            var b = stream.ReadByte();
+            var opcode = ReadOpcode(stream);
+            var operandData = ReadOperandData(stream, opcode);
+            var operand = GetOperand(opcode, operandData);
+            return new Instruction(opcode, operand);
+        }
 
-            switch (b)
-            {
-                case -1:
-                    throw new InvalidOperationException("End of stream");
-                case MarkerByte1:
-                case MarkerByte2:
-                case MarkerByte3:
-                case MarkerByte4:
-                case MarkerByte5:
-                    opcode = (Opcode)(b << 8);
-                    b = stream.ReadByte();
-                    if (b == -1) throw new InvalidOperationException("End of stream");
-                    opcode |= (Opcode)b;
-                    break;
-                default:
-                    opcode = (Opcode)b;
-                    break;
-            }
-
-            var operandSize = opcode.GetSize();
-            var operandData = Buffer.Get(operandSize);
-            if (stream.Read(operandData, 0, operandSize) != operandSize) throw new InvalidOperationException("End of stream");
-
+        private static Value GetOperand(Opcode opcode, byte[] operandData)
+        {
             Value operand;
-
             switch (opcode)
             {
                 case Opcode.Nop:
@@ -97,11 +78,48 @@ namespace Garply
                     var index = operandData[0];
                     operand = new Value(index);
                     break;
+                case Opcode.AssignVariable:
+                    throw new NotImplementedException();
                 default:
                     throw new ArgumentOutOfRangeException("opcode");
             }
 
-            return new Instruction(opcode, operand);
+            return operand;
+        }
+
+        private static byte[] ReadOperandData(Stream stream, Opcode opcode)
+        {
+            var operandSize = opcode.GetSize();
+            var operandData = Buffer.Get(operandSize);
+            if (stream.Read(operandData, 0, operandSize) != operandSize) throw new InvalidOperationException("End of stream");
+            return operandData;
+        }
+
+        private static Opcode ReadOpcode(Stream stream)
+        {
+            Opcode opcode;
+            var b = stream.ReadByte();
+
+            switch (b)
+            {
+                case -1:
+                    throw new InvalidOperationException("End of stream");
+                case MarkerByte1:
+                case MarkerByte2:
+                case MarkerByte3:
+                case MarkerByte4:
+                case MarkerByte5:
+                    opcode = (Opcode)(b << 8);
+                    b = stream.ReadByte();
+                    if (b == -1) throw new InvalidOperationException("End of stream");
+                    opcode |= (Opcode)b;
+                    break;
+                default:
+                    opcode = (Opcode)b;
+                    break;
+            }
+
+            return opcode;
         }
 
         public void Write(BinaryWriter writer)
