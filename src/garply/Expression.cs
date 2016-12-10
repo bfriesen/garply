@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
@@ -187,6 +188,16 @@ namespace Garply
                             listValue.RemoveRef();
                             break;
                         }
+                    case Opcode.AssignVariable:
+                        {
+                            var value = context.Pop();
+                            var result = context.Scope.SetValue(context, instruction.Operand, value);
+                            if (result.Type == Types.Error) return default(Value);
+                            context.Push(result);
+                            break;
+                        }
+                    default:
+                        throw new ArgumentOutOfRangeException("opcode");
                 }
             }
 

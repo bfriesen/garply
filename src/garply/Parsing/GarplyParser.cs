@@ -14,14 +14,12 @@ namespace Garply
         private readonly ErrorContext _errorContext;
         private readonly TryParse<Value> _tryParse;
 
-        public GarplyParser(ErrorContext errorContext)
+        public GarplyParser(ErrorContext errorContext, Scope.Builder scopeBuilder)
         {
             Parser<Value> mainParser = null;
             _mainParser = Parse.Ref(() => mainParser);
 
             _errorContext = errorContext;
-
-            var scopeBuilder = new ScopeBuilder();
 
             var assignmentParser = GetAssignmentParser(scopeBuilder);
             var literalParser = GetLiteralExpressionParser();
@@ -35,7 +33,7 @@ namespace Garply
         }
 
 
-        private Parser<Value> GetAssignmentParser(ScopeBuilder scopeBuilder)
+        private Parser<Value> GetAssignmentParser(Scope.Builder scopeBuilder)
         {
             var assignmentParser =
                 from marker in Parse.Char('$')
@@ -46,7 +44,7 @@ namespace Garply
             return assignmentParser;
         }
 
-        private Value GetAssignmentExpression(ScopeBuilder scopeBuilder, string variableName, Value valueExpression)
+        private Value GetAssignmentExpression(Scope.Builder scopeBuilder, string variableName, Value valueExpression)
         {
             if (valueExpression.Type == Types.Error) return valueExpression;
             var instructions = new List<Instruction>();

@@ -6,8 +6,9 @@ namespace Garply
     {
         public static void Start()
         {
-            var executionContext = new ExecutionContext();
-            var parser = new GarplyParser(executionContext);
+            var scopeBuilder = new Scope.Builder();
+            var executionContext = new ExecutionContext(scopeBuilder.Build());
+            var parser = new GarplyParser(executionContext, scopeBuilder);
 
             Console.Clear();
 
@@ -23,10 +24,17 @@ namespace Garply
                     case ":d":
                         Console.WriteLine();
                         Console.WriteLine(Heap.Dump);
+                        Console.WriteLine(executionContext.Scope);
                         Console.WriteLine();
                         continue;
                 }
                 var parseResult = parser.ParseLine(line);
+                if (scopeBuilder.Size > executionContext.Scope.Size)
+                {
+                    var newScope = executionContext.Scope.Copy(scopeBuilder.Size);
+                    executionContext.Scope.Delete();
+                    executionContext.Scope = newScope;
+                }
                 switch (parseResult.Type)
                 {
                     case Types.Expression:
