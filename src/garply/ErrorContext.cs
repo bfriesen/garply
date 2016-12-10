@@ -9,16 +9,18 @@ namespace Garply
 
         public Value TakeErrors()
         {
-            Value errorTuple = default(Value);
+            Value errorList = Empty.List;
             while (_errors.Count > 0)
             {
                 var error = _errors.Dequeue();
                 var errorMessage = Heap.AllocateString(error.Message, false);
+                var errorTuple = Heap.AllocateTuple(errorMessage);
+                errorList = Heap.AllocateList(errorTuple, errorList);
                 errorMessage.AddRef();
-                errorTuple = Heap.AllocateTuple(errorMessage, errorTuple);
                 errorTuple.AddRef();
+                errorList.AddRef();
             }
-            return errorTuple;
+            return errorList;
         }
     }
 }
