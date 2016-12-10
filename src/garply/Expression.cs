@@ -191,7 +191,15 @@ namespace Garply
                     case Opcode.AssignVariable:
                         {
                             var value = context.Pop();
-                            var result = context.Scope.SetValue(context, instruction.Operand, value);
+                            var result = context.Scope.SetValue(context, instruction.Operand, value, false);
+                            if (result.Type == Types.Error) return default(Value);
+                            context.Push(result);
+                            break;
+                        }
+                    case Opcode.AssignMutableVariable:
+                        {
+                            var value = context.Pop();
+                            var result = context.Scope.SetValue(context, instruction.Operand, value, true);
                             if (result.Type == Types.Error) return default(Value);
                             context.Push(result);
                             break;

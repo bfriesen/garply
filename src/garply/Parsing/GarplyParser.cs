@@ -36,23 +36,43 @@ namespace Garply
         private Parser<Value> GetAssignmentParser(Scope.Builder scopeBuilder)
         {
             var assignmentParser =
-                from marker in Parse.Char('$')
-                from variableName in Parse.LetterOrDigit.AtLeastOnce().Text()
+                from mutableMarker in Parse.Char('$').Once().Optional()
+                from variableIdentifier in Parse.LetterOrDigit.Or(Parse.Char('_')).AtLeastOnce()
                 from assignmentOperator in Parse.Char('=').Token()
                 from value in _mainParser
-                select GetAssignmentExpression(scopeBuilder, variableName, value);
+                let variableName = new string(
+                    mutableMarker.GetOrElse(Enumerable.Empty<char>())
+                        .Concat(variableIdentifier).ToArray())
+                select GetAssignmentExpression(scopeBuilder, variableName, value, mutableMarker.IsDefined);
             return assignmentParser;
         }
 
-        private Value GetAssignmentExpression(Scope.Builder scopeBuilder, string variableName, Value valueExpression)
+        private Value GetAssignmentExpression(Scope.Builder scopeBuilder, string variableName, Value valueExpression, bool mutable)
         {
             if (valueExpression.Type == Types.Error) return valueExpression;
             var instructions = new List<Instruction>();
             var expression = Heap.GetExpression((int)valueExpression.Raw);
             instructions.AddRange(expression.Instructions);
-            instructions.Add(Instruction.AssignVariable(scopeBuilder.GetOrCreateIndex(variableName)));
+            instructions.Add(Instruction.AssignVariable(scopeBuilder.GetOrCreateIndex(variableName), mutable));
             valueExpression.RemoveRef();
             return AllocateExpression(expression.Type, instructions.ToArray());
+        }
+
+        private Parser<Value> GetVariableParser(Scope.Builder scopeBuilder)
+        {
+            var variableParser =
+                from mutableMarker in Parse.Char('$').Once().Optional()
+                from variableIdentifier in Parse.LetterOrDigit.AtLeastOnce().Text()
+                let variableName = new string(
+                    mutableMarker.GetOrElse(Enumerable.Empty<char>())
+                        .Concat(variableIdentifier).ToArray())
+                let variableIndex = GetVariableIndex(variableName, scopeBuilder)
+                select variableIndex.Type == Types.Error ? default(Value) :
+                    AllocateExpression(Types.Any, new[]
+                    {
+                        Instruction.ReadVariable(variableIndex)
+                    });
+            return variableParser;
         }
 
         public Value ParseLine(string line)
@@ -92,20 +112,6 @@ namespace Garply
                 booleanParser.Or(floatParser).Or(integerParser).Or(typeParser).Or(stringParser).Or(tupleParser).Or(listParser).Or(variableParser);
 
             return literalParser;
-        }
-
-        private Parser<Value> GetVariableParser(Scope.Builder scopeBuilder)
-        {
-            var variableParser =
-                from marker in Parse.Char('$')
-                from variableName in Parse.LetterOrDigit.AtLeastOnce().Text()
-                let variableIndex = GetVariableIndex(variableName, scopeBuilder)
-                select variableIndex.Type == Types.Error ? default(Value) :
-                    AllocateExpression(Types.Any, new[]
-                    {
-                        Instruction.ReadVariable(variableIndex)
-                    });
-            return variableParser;
         }
 
         private Value GetVariableIndex(string variableName, Scope.Builder scopeBuilder)

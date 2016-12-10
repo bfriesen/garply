@@ -4,7 +4,23 @@ namespace Garply
 {
     internal partial class Scope
     {
-        private readonly Value[] _variables;
+        private struct Variable
+        {
+            public Variable(Value value)
+                : this(value, false)
+            {
+            }
+            public Variable(Value value, bool isMutable)
+            {
+                Value = value;
+                IsMutable = isMutable;
+            }
+            public Value Value { get; }
+            public bool IsMutable { get; }
+            public override string ToString() => Value.ToString();
+        }
+
+        private readonly Variable[] _variables;
 
         private Scope(Scope other, int size)
             : this(size)
@@ -12,42 +28,51 @@ namespace Garply
             var errorContext = new ErrorContext();
             for (int i = 0; i < Size && i < other.Size; i++)
             {
-                SetValue(errorContext, i, other._variables[i]);
+                SetValue(errorContext, i, other._variables[i].Value, other._variables[i].IsMutable);
             }
         }
 
         private Scope(int size)
         {
-            _variables = new Value[size];
+            _variables = new Variable[size];
         }
 
         public int Size => _variables.Length;
 
-        public Value GetValue(int index) => _variables[index];
-
-        public Value SetValue(ErrorContext errorContext, Value indexValue, Value value)
+        public Value GetValue(int index)
         {
-            return SetValue(errorContext, (int)indexValue.Raw, value);
+            return _variables[index].Value;
         }
 
-        public Value SetValue(ErrorContext errorContext, int index, Value value)
+        public Value SetValue(ErrorContext errorContext, Value indexValue, Value value, bool isMutable)
         {
-            if (_variables[index].Type != Types.Error)
-            {
-                errorContext.AddError(new Error("Rebinding is not supported."));
-                return default(Value);
-            }
+            return SetValue(errorContext, (int)indexValue.Raw, value, isMutable);
+        }
 
-            _variables[index] = value;
-            value.AddRef();
-            return value;
+        public Value SetValue(ErrorContext errorContext, int index, Value value, bool isMutable)
+        {
+            if (_variables[index].Value.Type == Types.Error) // the variable has never been set
+            {
+                _variables[index] = new Variable(value, isMutable);
+                value.AddRef();
+                return value;
+            }
+            if (_variables[index].IsMutable)
+            {
+                _variables[index].Value.RemoveRef();
+                _variables[index] = new Variable(value, _variables[index].IsMutable);
+                value.AddRef();
+                return value;
+            }
+            errorContext.AddError(new Error("Rebinding is not supported."));
+            return default(Value);
         }
 
         public void Delete()
         {
             for (int i = 0; i < Size; i++)
             {
-                _variables[i].RemoveRef();
+                _variables[i].Value.RemoveRef();
             }
         }
 

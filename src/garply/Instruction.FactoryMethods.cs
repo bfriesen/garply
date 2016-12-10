@@ -27,8 +27,8 @@
         public static Instruction ListAdd() => new Instruction(Opcode.ListAdd);
         public static Instruction ListHead() => new Instruction(Opcode.ListHead);
         public static Instruction ListTail() => new Instruction(Opcode.ListTail);
-        public static Instruction AssignVariable(int variableIndex) => AssignVariable(new Value(variableIndex));
-        public static Instruction AssignVariable(Value variableIndexValue) => new Instruction(Opcode.AssignVariable, variableIndexValue);
+        public static Instruction AssignVariable(int variableIndex, bool mutable) => AssignVariable(new Value(variableIndex), mutable);
+        public static Instruction AssignVariable(Value variableIndexValue, bool mutable) => new Instruction(mutable ? Opcode.AssignMutableVariable : Opcode.AssignVariable, variableIndexValue);
         public static Instruction ReadVariable(int variableIndex) => ReadVariable(new Value(variableIndex));
         public static Instruction ReadVariable(Value variableIndexValue) => new Instruction(Opcode.ReadVariable, variableIndexValue);
     }
