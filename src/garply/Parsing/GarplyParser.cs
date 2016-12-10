@@ -8,25 +8,31 @@ namespace Garply
 {
     internal class GarplyParser
     {
-        private readonly MainParser _mainParser;
+        private delegate IResult<T> TryParse<T>(string input);
+
+        private readonly Parser<Value> _mainParser;
         private readonly ErrorContext _errorContext;
+        private readonly TryParse<Value> _tryParse;
 
         public GarplyParser(ErrorContext errorContext)
         {
-            _mainParser = new MainParser();
+            Parser<Value> mainParser = null;
+            _mainParser = Parse.Ref(() => mainParser);
+
             _errorContext = errorContext;
 
             var literalParser = GetLiteralExpressionParser();
 
-            _mainParser.SetParser(
-                from whitespace in Parse.WhiteSpace.Many()
-                from result in literalParser
-                select result);
+            mainParser =
+                literalParser
+                    .Token();
+
+            _tryParse = mainParser.TryParse;
         }
 
         public Value ParseLine(string line)
         {
-            var result = _mainParser.Parser.TryParse(line);
+            var result = _tryParse(line);
 
             if (result.WasSuccessful)
             {
@@ -198,7 +204,7 @@ namespace Garply
         {
             var tupleParser =
                 from openParen in Parse.Char('(')
-                from items in Parse.Ref(() => _mainParser.Parser).DelimitedBy(Parse.Char(',').Token())
+                from items in _mainParser.DelimitedBy(Parse.Char(',').Token())
                 from closeParen in Parse.Char(')')
                 select GetCreateTupleExpression(items);
             return tupleParser;
@@ -230,7 +236,7 @@ namespace Garply
         {
             var tupleParser =
                 from openParen in Parse.Char('[')
-                from items in Parse.Ref(() => _mainParser.Parser).DelimitedBy(
+                from items in _mainParser.DelimitedBy(
                     from w1 in Parse.WhiteSpace.Many()
                     from c in Parse.Char(',')
                     from w2 in Parse.WhiteSpace.Many()
@@ -272,12 +278,6 @@ namespace Garply
         private IEnumerable<char> Once(char c, bool condition = true)
         {
             if (condition) yield return c;
-        }
-
-        private class MainParser
-        {
-            public Parser<Value> Parser { get; private set; }
-            public void SetParser(Parser<Value> parser) => Parser = parser;
         }
     }
 }
