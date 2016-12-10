@@ -68,14 +68,14 @@ namespace Garply
                 from t in Parse.String("true")
                 select AllocateExpression(Types.Boolean, new Instruction[]
                 {
-                    new Instruction(Opcode.LoadBoolean, new Value(true))
+                    Instruction.True()
                 });
 
             var falseParser =
                 from f in Parse.String("false")
                 select AllocateExpression(Types.Boolean, new Instruction[]
                 {
-                    new Instruction(Opcode.LoadBoolean, new Value(false))
+                    Instruction.False()
                 });
 
             return trueParser.Or(falseParser);
@@ -90,7 +90,7 @@ namespace Garply
                 select value.Type == Types.Error ? value :
                     AllocateExpression(Types.Integer, new Instruction[]
                     {
-                        new Instruction(Opcode.LoadInteger, value)
+                        Instruction.LoadInteger(value)
                     });
 
             return integerParser;
@@ -122,7 +122,7 @@ namespace Garply
                 select value.Type == Types.Error ? value :
                     AllocateExpression(Types.Float, new Instruction[]
                     {
-                        new Instruction(Opcode.LoadFloat, value)
+                        Instruction.LoadFloat(value)
                     });
 
             return integerParser;
@@ -167,7 +167,7 @@ namespace Garply
                 from closeBrace in Parse.Char('>')
                 select AllocateExpression(Types.Type, new Instruction[]
                 {
-                    new Instruction(Opcode.LoadType, type)
+                    Instruction.LoadType(type)
                 });
         }
 
@@ -190,7 +190,7 @@ namespace Garply
             var stringValue = StringDatabase.Register(value);
             return new[]
             {
-                new Instruction(Opcode.LoadString, stringValue)
+                Instruction.LoadString(stringValue)
             };
         }
 
@@ -221,7 +221,7 @@ namespace Garply
                 instructions.AddRange(Heap.GetExpression((int)itemExpressionValue.Raw).Instructions);
                 itemExpressionValue.RemoveRef();
             }
-            instructions.Add(new Instruction(Opcode.NewTuple, new Value(arity)));
+            instructions.Add(Instruction.NewTuple(arity));
             var expressionValue = AllocateExpression(Types.Tuple, instructions.ToArray());
             return expressionValue;
         }
@@ -244,7 +244,7 @@ namespace Garply
         private Value GetCreateListExpression(IEnumerable<Value> itemExpressionValues)
         {
             var instructions = new List<Instruction>();
-            instructions.Add(new Instruction(Opcode.ListEmpty));
+            instructions.Add(Instruction.ListEmpty());
             using (var enumerator = itemExpressionValues.GetEnumerator()) while (enumerator.MoveNext())
             {
                 var itemExpressionValue = enumerator.Current;
@@ -255,7 +255,7 @@ namespace Garply
                 }
                 Debug.Assert(itemExpressionValue.Type == Types.Expression);
                 instructions.AddRange(Heap.GetExpression((int)itemExpressionValue.Raw).Instructions);
-                instructions.Add(new Instruction(Opcode.ListAdd));
+                instructions.Add(Instruction.ListAdd());
                 itemExpressionValue.RemoveRef();
             }
             var expressionValue = AllocateExpression(Types.List, instructions.ToArray());

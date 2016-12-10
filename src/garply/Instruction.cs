@@ -3,21 +3,21 @@ using System.IO;
 
 namespace Garply
 {
-    internal struct Instruction
+    internal partial struct Instruction
     {
         public const byte MarkerByte1 = 251;
         public const byte MarkerByte2 = 252;
         public const byte MarkerByte3 = 253;
         public const byte MarkerByte4 = 254;
         public const byte MarkerByte5 = 255;
-        
-        public Instruction(Opcode opcode)
+
+        private Instruction(Opcode opcode)
         {
             Opcode = opcode;
             Operand = default(Value);
         }
 
-        public Instruction(Opcode opcode, Value operand)
+        private Instruction(Opcode opcode, Value operand)
         {
             Opcode = opcode;
             Operand = operand;
