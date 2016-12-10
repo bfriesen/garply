@@ -27,5 +27,7 @@
         public static Instruction ListAdd() => new Instruction(Opcode.ListAdd);
         public static Instruction ListHead() => new Instruction(Opcode.ListHead);
         public static Instruction ListTail() => new Instruction(Opcode.ListTail);
+        public static Instruction AssignVariable(int variableIndex) => AssignVariable(new Value(variableIndex));
+        public static Instruction AssignVariable(Value variableIndexValue) => new Instruction(Opcode.AssignVariable, variableIndexValue);
     }
 }

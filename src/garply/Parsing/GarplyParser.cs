@@ -21,13 +21,40 @@ namespace Garply
 
             _errorContext = errorContext;
 
+            var scopeBuilder = new ScopeBuilder();
+
+            var assignmentParser = GetAssignmentParser(scopeBuilder);
             var literalParser = GetLiteralExpressionParser();
 
             mainParser =
-                literalParser
+                assignmentParser
+                    .Or(literalParser)
                     .Token();
 
             _tryParse = mainParser.TryParse;
+        }
+
+
+        private Parser<Value> GetAssignmentParser(ScopeBuilder scopeBuilder)
+        {
+            var assignmentParser =
+                from marker in Parse.Char('$')
+                from variableName in Parse.LetterOrDigit.AtLeastOnce().Text()
+                from assignmentOperator in Parse.Char('=').Token()
+                from value in _mainParser
+                select GetAssignmentExpression(scopeBuilder, variableName, value);
+            return assignmentParser;
+        }
+
+        private Value GetAssignmentExpression(ScopeBuilder scopeBuilder, string variableName, Value valueExpression)
+        {
+            if (valueExpression.Type == Types.Error) return valueExpression;
+            var instructions = new List<Instruction>();
+            var expression = Heap.GetExpression((int)valueExpression.Raw);
+            instructions.AddRange(expression.Instructions);
+            instructions.Add(Instruction.AssignVariable(scopeBuilder.GetIndex(variableName)));
+            valueExpression.RemoveRef();
+            return AllocateExpression(expression.Type, instructions.ToArray());
         }
 
         public Value ParseLine(string line)
@@ -270,14 +297,14 @@ namespace Garply
 
         private static Value AllocateExpression(Types type, Instruction[] instructions)
         {
-            var expressionValue = Heap.AllocateExpression(Types.Tuple, instructions);
+            var expressionValue = Heap.AllocateExpression(type, instructions);
             expressionValue.AddRef();
             return expressionValue;
         }
 
-        private IEnumerable<char> Once(char c, bool condition = true)
+        private IEnumerable<T> Once<T>(T t, bool condition = true)
         {
-            if (condition) yield return c;
+            if (condition) yield return t;
         }
     }
 }
