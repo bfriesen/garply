@@ -200,23 +200,30 @@ namespace Garply
                 from openParen in Parse.Char('(')
                 from items in Parse.Ref(() => _mainParser.Parser).DelimitedBy(Parse.Char(',').Token())
                 from closeParen in Parse.Char(')')
-                select AllocateExpression(Types.Tuple, GetTupleLiteralCreationInstructions(items));
+                select GetCreateTupleExpression(items);
             return tupleParser;
         }
 
-        private Instruction[] GetTupleLiteralCreationInstructions(IEnumerable<Value> items)
+        private Value GetCreateTupleExpression(IEnumerable<Value> itemExpressionValues)
         {
             var arity = 0;
             var instructions = new List<Instruction>();
-            foreach (var item in items)
+            using (var enumerator = itemExpressionValues.GetEnumerator()) while (enumerator.MoveNext())
             {
+                var itemExpressionValue = enumerator.Current;
+                if (itemExpressionValue.Type == Types.Error)
+                {
+                    while (enumerator.MoveNext()) enumerator.Current.RemoveRef();
+                    return itemExpressionValue;
+                }
                 arity++;
-                Debug.Assert(item.Type == Types.Expression);
-                instructions.AddRange(Heap.GetExpression((int)item.Raw).Instructions);
-                item.RemoveRef();
+                Debug.Assert(itemExpressionValue.Type == Types.Expression);
+                instructions.AddRange(Heap.GetExpression((int)itemExpressionValue.Raw).Instructions);
+                itemExpressionValue.RemoveRef();
             }
             instructions.Add(new Instruction(Opcode.NewTuple, new Value(arity)));
-            return instructions.ToArray();
+            var expressionValue = AllocateExpression(Types.Tuple, instructions.ToArray());
+            return expressionValue;
         }
 
         private Parser<Value> GetListLiteralParser()
@@ -229,23 +236,30 @@ namespace Garply
                     from w2 in Parse.WhiteSpace.Many()
                     select c)
                 from closeParen in Parse.Char(']')
-                select AllocateExpression(Types.List, GetListLiteralCreationInstructions(items));
+                select GetCreateListExpression(items);
 
             return tupleParser;
         }
 
-        private Instruction[] GetListLiteralCreationInstructions(IEnumerable<Value> items)
+        private Value GetCreateListExpression(IEnumerable<Value> itemExpressionValues)
         {
             var instructions = new List<Instruction>();
             instructions.Add(new Instruction(Opcode.ListEmpty));
-            foreach (var expressionValue in items.Reverse())
+            using (var enumerator = itemExpressionValues.GetEnumerator()) while (enumerator.MoveNext())
             {
-                Debug.Assert(expressionValue.Type == Types.Expression);
-                instructions.AddRange(Heap.GetExpression((int)expressionValue.Raw).Instructions);
+                var itemExpressionValue = enumerator.Current;
+                if (itemExpressionValue.Type == Types.Error)
+                {
+                    while (enumerator.MoveNext()) enumerator.Current.RemoveRef();
+                    return itemExpressionValue;
+                }
+                Debug.Assert(itemExpressionValue.Type == Types.Expression);
+                instructions.AddRange(Heap.GetExpression((int)itemExpressionValue.Raw).Instructions);
                 instructions.Add(new Instruction(Opcode.ListAdd));
-                expressionValue.RemoveRef();
+                itemExpressionValue.RemoveRef();
             }
-            return instructions.ToArray();
+            var expressionValue = AllocateExpression(Types.List, instructions.ToArray());
+            return expressionValue;
         }
 
         private static Value AllocateExpression(Types type, Instruction[] instructions)
