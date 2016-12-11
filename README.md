@@ -2,6 +2,8 @@
 
 _Because, why not?_
 
+------------------------------------------------------------
+
 The garply runtime is currently implemented in c#, but should be portable with relative ease to other languages and platforms.
 
 ### REPL
@@ -20,7 +22,7 @@ Command | Description
 `:c` | Clear the console
 `:d` | Dump the current state of the REPL
 
-#### Literal values
+### Literal values
 
 Type a literal value, and the terminal will print it out. Current supported types are 64 bit int or float, boolean, string, tuple, list, and type.
 
@@ -68,7 +70,7 @@ garply> <type>
 <type>
 ```
 
-#### Variables
+### Variables
 
 Variables can contain any type of value, and can be declared as immutable or mutable. Assignment operations return the value assigned.
 
