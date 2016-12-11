@@ -84,9 +84,8 @@ garply> foo
 garply> foo = 456
 [{"Cannot rebind to immutable variable."}]
 garply> 
-```
-
-```
+garply> 
+garply> 
 garply> $bar = "abc"
 "abc"
 garply> $bar
@@ -95,5 +94,17 @@ garply> $bar = 123
 123
 garply> $bar
 123
+garply> 
+```
+
+Note that the `$` character is part of the name of the variable. Therefore, mutable and imutable versions with the same name can exist with no confusion.
+
+```
+garply> foo = 123
+123
+garply> $foo = 456
+456
+garply> {foo, $foo}
+{123,456}
 garply> 
 ```
