@@ -1,31 +1,15 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace Garply
 {
     internal partial class Scope
     {
-        private struct Variable
-        {
-            public Variable(Value value)
-                : this(value, false)
-            {
-            }
-            public Variable(Value value, bool isMutable)
-            {
-                Value = value;
-                IsMutable = isMutable;
-            }
-            public Value Value { get; }
-            public bool IsMutable { get; }
-            public override string ToString() => Value.Type == Types.expression
-                ? Heap.GetExpression((int)Value.Raw).ToString(true)
-                : Value.ToString();
-        }
-
         private readonly Variable[] _variables;
+        private readonly string[] _variableNames;
 
-        private Scope(Scope other, int size)
-            : this(size)
+        private Scope(Scope other, Dictionary<string, int> variableDefinitions)
+            : this(variableDefinitions)
         {
             var errorContext = new ErrorContext();
             for (int i = 0; i < Size && i < other.Size; i++)
@@ -34,9 +18,14 @@ namespace Garply
             }
         }
 
-        private Scope(int size)
+        private Scope(Dictionary<string, int> variableDefinitions)
         {
-            _variables = new Variable[size];
+            _variables = new Variable[variableDefinitions.Count];
+            _variableNames = new string[variableDefinitions.Count];
+            foreach (var variableDefinition in variableDefinitions)
+            {
+                _variableNames[variableDefinition.Value] = variableDefinition.Key;
+            }
         }
 
         public int Size => _variables.Length;
@@ -73,16 +62,10 @@ namespace Garply
             }
         }
 
-        public Scope Copy(int newSize) => new Scope(this, newSize);
+        public Scope Copy(Builder scopeBuilder) => new Scope(this, scopeBuilder.GetVariableDefinitions());
 
-        public override string ToString()
-        {
-            if (_variables.Length == 0) return "Scope[]";
-            return $@"Scope[
-  {string.Join(@",
-  ", _variables.Select(x => x.ToString()))}
-]";
-        }
-            
+        public override string ToString() => _variables.Length == 0
+            ? "Scope[]"
+            : $"Scope[\r\n  {string.Join(",\r\n  ", _variables.Zip(_variableNames, (v, n) => $"{{{n},{(v.Value.Type == Types.error ? "" : v.ToString())}}}"))}\r\n]";
     }
 }

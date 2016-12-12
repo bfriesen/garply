@@ -6,31 +6,33 @@ namespace Garply
     {
         public class Builder
         {
-            private readonly Dictionary<string, int> _indexLookup = new Dictionary<string, int>();
+            private readonly Dictionary<string, int> _variables = new Dictionary<string, int>();
             private int _size;
 
             public int GetOrCreateIndex(string variableName)
             {
-                int index;
-                if (!_indexLookup.TryGetValue(variableName, out index))
+                int variableIndex;
+                if (!_variables.TryGetValue(variableName, out variableIndex))
                 {
-                    index = _size++;
-                    _indexLookup.Add(variableName, index);
+                    variableIndex = _size++;
+                    _variables.Add(variableName, variableIndex);
                 }
-                return index;
+                return variableIndex;
             }
 
             public bool TryGetIndex(string variableName, out int index)
             {
-                return _indexLookup.TryGetValue(variableName, out index);
+                return _variables.TryGetValue(variableName, out index);
             }
 
             public int Size { get { return _size; } }
 
             public Scope Build()
             {
-                return new Scope(_size);
+                return new Scope(_variables);
             }
+
+            public Dictionary<string, int> GetVariableDefinitions() => _variables;
         }
     }
 }

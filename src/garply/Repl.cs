@@ -32,7 +32,7 @@ namespace Garply
                 var parseResult = parser.ParseLine(line);
                 if (scopeBuilder.Size > executionContext.Scope.Size)
                 {
-                    var newScope = executionContext.Scope.Copy(scopeBuilder.Size);
+                    var newScope = executionContext.Scope.Copy(scopeBuilder);
                     executionContext.Scope.Delete();
                     executionContext.Scope = newScope;
                 }
