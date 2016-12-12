@@ -309,28 +309,28 @@ namespace Garply
                     .Append(string.Join(", ",
                         _instance.Value.Strings.Select((s, i) => new { s, i })
                             .Zip(_instance.Value.StringReferenceCounts,
-                            (x, c) => $"({c},{x.s ?? "|Empty|"},{_instance.Value.AvailableStringIndexes.Contains(x.i)})")))
+                            (x, c) => $"({c},{x.s ?? ""},{_instance.Value.AvailableStringIndexes.Contains(x.i)})")))
                     .AppendLine("]");
 
                 sb.Append("Tuples[")
                     .Append(string.Join(", ",
                         _instance.Value.Tuples.Select((t, i) => new { t, i })
                             .Zip(_instance.Value.TupleReferenceCounts,
-                            (x, c) => $"({c},{(x.t.IsEmpty ? "|Empty|" : x.t.ToString())},{_instance.Value.AvailableTupleIndexes.Contains(x.i)})")))
+                            (x, c) => $"({c},{(x.t.IsEmpty ? "" : x.t.ToString())},{_instance.Value.AvailableTupleIndexes.Contains(x.i)})")))
                     .AppendLine("]");
 
                 sb.Append("Lists[")
                     .Append(string.Join(", ",
                         _instance.Value.Lists.Select((l, i) => new { l, i })
                             .Zip(_instance.Value.ListReferenceCounts,
-                            (x, c) => $"({c},{(x.l.IsEmpty ? "|Empty|" : x.l.ToString())},{_instance.Value.AvailableListIndexes.Contains(x.i)})")))
+                            (x, c) => $"({c},{(x.l.IsEmpty ? "" : x.l.ToString())},{_instance.Value.AvailableListIndexes.Contains(x.i)})")))
                     .AppendLine("]");
 
                 sb.Append("Expressions[")
                     .Append(string.Join(", ",
                         _instance.Value.Expressions.Select((e, i) => new { e, i })
                             .Zip(_instance.Value.ExpressionReferenceCounts,
-                            (x, c) => $"({c},{(x.e.IsEmpty ? "|Empty|" : x.e.ToString(true))},{_instance.Value.AvailableExpressionIndexes.Contains(x.i)})")))
+                            (x, c) => $"({c},{(x.e.IsEmpty ? "" : x.e.ToString(true))},{_instance.Value.AvailableExpressionIndexes.Contains(x.i)})")))
                     .Append(']');
 
                 return sb.ToString();

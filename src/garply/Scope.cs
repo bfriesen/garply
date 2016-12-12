@@ -17,7 +17,9 @@ namespace Garply
             }
             public Value Value { get; }
             public bool IsMutable { get; }
-            public override string ToString() => Value.ToString();
+            public override string ToString() => Value.Type == Types.expression
+                ? Heap.GetExpression((int)Value.Raw).ToString(true)
+                : Value.ToString();
         }
 
         private readonly Variable[] _variables;
