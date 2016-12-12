@@ -42,6 +42,12 @@ namespace Garply
             Raw = (uint)value;
         }
 
+        public Value(Opcode value)
+        {
+            Type = Types.opcode;
+            Raw = (uint)value;
+        }
+
         public void Write(Opcode opcode, BinaryWriter writer)
         {
             switch (Type)
@@ -76,7 +82,7 @@ namespace Garply
         {
             switch (Type)
             {
-                case Types.error: return "{Error}";
+                case Types.error: return "#Error#";
                 case Types.@bool: return Raw == 0 ? "false" : "true";
                 case Types.@float: return BitConverter.Int64BitsToDouble(Raw).ToString();
                 case Types.@int: return Raw.ToString();
@@ -84,6 +90,7 @@ namespace Garply
                 case Types.tuple: return Heap.GetTuple((int)Raw).ToString();
                 case Types.list: return Heap.GetList((int)Raw).ToString();
                 case Types.type: return $"<{((Types)(uint)Raw).ToString()}>";
+                case Types.opcode: return $"|{((Opcode)(ushort)Raw).ToString()}|";
                 case Types.expression: return Heap.GetExpression((int)Raw).ToString();
                 default: return $"Unknown Type: {Type}";
             }

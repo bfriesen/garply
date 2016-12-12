@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace Garply
@@ -80,6 +81,12 @@ namespace Garply
                             context.Push(new Value(type));
                             break;
                         }
+                    case Opcode.LoadOpcode:
+                        {
+                            var opcode = (Opcode)(ushort)instruction.Operand.Raw;
+                            context.Push(new Value(opcode));
+                            break;
+                        }
                     case Opcode.LoadString:
                         {
                             Debug.Assert(instruction.Operand.Type == Types.@string);
@@ -152,6 +159,27 @@ namespace Garply
                             var tuple = Heap.AllocateTuple(arity, context);
                             context.Push(tuple);
                             tuple.AddRef();
+                            break;
+                        }
+                    case Opcode.NewExpression:
+                        {
+                            var instructionCount = (int)instruction.Operand.Raw;
+                            var typeValue = context.Pop();
+                            Debug.Assert(typeValue.Type == Types.type);
+                            var type = (Types)(uint)typeValue.Raw;
+                            var instructions = new Instruction[instructionCount];
+                            for (int j = 0; j < instructionCount; j++)
+                            {
+                                var instructionTupleValue = context.Pop();
+                                var instructionTuple = Heap.GetTuple((int)instructionTupleValue.Raw);
+                                Debug.Assert(instructionTuple.Items.Count == 2);
+                                Debug.Assert(instructionTuple.Items[0].Type == Types.opcode);
+                                instructions[j] = Instruction.FromTuple(instructionTuple);
+                                instructionTupleValue.RemoveRef();
+                            }
+                            var expressionValue = Heap.AllocateExpression(type, instructions.ToArray());
+                            context.Push(expressionValue);
+                            expressionValue.AddRef();
                             break;
                         }
                     case Opcode.ListEmpty:
@@ -237,6 +265,13 @@ namespace Garply
             return returnValue;
         }
 
-        public override string ToString() => $"Expression<{Type}>";
+        public string ToString(bool shortForm) => shortForm
+            ? $"expr<{Type}>[{_instructions.Length}]"
+            : ToString();
+
+        public override string ToString() => $@"expr<{Type}>[
+  {string.Join(@",
+  ", _instructions)}
+]";
     }
 }

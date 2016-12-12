@@ -12,9 +12,10 @@
         @string    = ( 0x00000040 | Reference          ) & ~Abstract ,
         expression = ( 0x00000080 | Reference          ) & ~Abstract ,
         type       = ( 0x00000100 | Value              ) & ~Abstract ,
-        @bool      = ( 0x00000200 | Value              ) & ~Abstract ,
-        @int       = ( 0x00000400 | Value     | Number ) & ~Abstract ,
-        @float     = ( 0x00000800 | Value     | Number ) & ~Abstract ,
+        opcode     = ( 0x00000200 | Value              ) & ~Abstract ,
+        @bool      = ( 0x00000400 | Value              ) & ~Abstract ,
+        @int       = ( 0x00000800 | Value     | Number ) & ~Abstract ,
+        @float     = ( 0x00001000 | Value     | Number ) & ~Abstract ,
 
         Any        = 0xFFFFFFFF
     }

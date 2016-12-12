@@ -145,7 +145,7 @@ namespace Garply
             {
                 return Opcode.ToString();
             }
-            return $"{Opcode}:{Operand.ToString()}";
+            return $"(|{Opcode}|,{Operand.ToString()})";
         }
     }
 }

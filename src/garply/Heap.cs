@@ -330,7 +330,7 @@ namespace Garply
                     .Append(string.Join(", ",
                         _instance.Value.Expressions.Select((e, i) => new { e, i })
                             .Zip(_instance.Value.ExpressionReferenceCounts,
-                            (x, c) => $"({c},{(x.e.IsEmpty ? "|Empty|" : x.e.ToString())},{_instance.Value.AvailableExpressionIndexes.Contains(x.i)})")))
+                            (x, c) => $"({c},{(x.e.IsEmpty ? "|Empty|" : x.e.ToString(true))},{_instance.Value.AvailableExpressionIndexes.Contains(x.i)})")))
                     .Append(']');
 
                 return sb.ToString();

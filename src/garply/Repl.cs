@@ -39,7 +39,8 @@ namespace Garply
                 {
                     case Types.expression:
                         {
-                            var value = Heap.GetExpression((int)parseResult.Raw).Evaluate(executionContext);
+                            var expression = Heap.GetExpression((int)parseResult.Raw);
+                            var value = expression.Evaluate(executionContext);
                             if (value.Type == Types.error)
                             {
                                 var error = executionContext.TakeErrors();

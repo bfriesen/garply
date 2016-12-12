@@ -21,15 +21,46 @@ namespace Garply
 
             _errorContext = errorContext;
 
+            var expressionParser = GetExpressionParser();
             var assignmentParser = GetAssignmentParser(scopeBuilder);
             var literalParser = GetLiteralExpressionParser(scopeBuilder);
 
             mainParser =
-                assignmentParser
-                    .Or(literalParser)
+                expressionParser.Or(
+                assignmentParser).Or(
+                literalParser)
                     .Token();
 
             _tryParse = mainParser.TryParse;
+        }
+
+        private Parser<Value> GetExpressionParser()
+        {
+            var expressionParser =
+                from header in Parse.String("expr(")
+                from expression in _mainParser
+                from footer in Parse.Char(')')
+                select expression.Type == Types.error ? expression :
+                    GetExpressionExpression(expression);
+            return expressionParser;
+        }
+
+        private static Value GetExpressionExpression(Value expressionValue)
+        {
+            Debug.Assert(expressionValue.Type == Types.expression);
+            var expression = Heap.GetExpression((int)expressionValue.Raw);
+            expressionValue.RemoveRef();
+            var instructions = new List<Instruction>();
+            foreach (var instruction in expression.Instructions.Reverse())
+            {
+                instructions.Add(Instruction.LoadOpcode(instruction.Opcode));
+                instructions.Add(Instruction.LoadInteger(instruction.Operand));
+                instructions.Add(Instruction.NewTuple(2));
+            }
+            instructions.Add(Instruction.LoadType(expression.Type));
+            instructions.Add(Instruction.NewExpression(expression.Instructions.Count));
+            var expressionExpressionValue = AllocateExpression(Types.expression, instructions.ToArray());
+            return expressionExpressionValue;
         }
 
         private Parser<VariableDefinition> GetVariableDefinitionParser()
