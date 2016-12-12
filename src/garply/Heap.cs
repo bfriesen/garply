@@ -305,33 +305,59 @@ namespace Garply
             {
                 var sb = new StringBuilder();
 
-                sb.Append("Strings[")
-                    .Append(string.Join(", ",
-                        _instance.Value.Strings.Select((s, i) => new { s, i })
-                            .Zip(_instance.Value.StringReferenceCounts,
-                            (x, c) => $"({c},{x.s ?? ""},{_instance.Value.AvailableStringIndexes.Contains(x.i)})")))
-                    .AppendLine("]");
+                if (_instance.Value.Strings.Count == 0)
+                {
+                    sb.AppendLine("Strings[]").AppendLine();
+                }
+                else
+                {
+                    sb.Append(@"Strings[
+  ")
+                        .Append(string.Join(@",
+  ",
+                            _instance.Value.Strings.Select((s, i) => new { s, i })
+                                .Zip(_instance.Value.StringReferenceCounts, (x, c) =>
+                                    $"{{{c},{x.s ?? ""},{_instance.Value.AvailableStringIndexes.Contains(x.i)}}}")))
+                        .AppendLine(@"
+]").AppendLine();
+                } 
 
-                sb.Append("Tuples[")
-                    .Append(string.Join(", ",
+                sb.Append(@"Tuples[
+  ")
+                    .Append(string.Join(@",
+  ",
                         _instance.Value.Tuples.Select((t, i) => new { t, i })
                             .Zip(_instance.Value.TupleReferenceCounts,
                             (x, c) => $"({c},{(x.t.IsEmpty ? "" : x.t.ToString())},{_instance.Value.AvailableTupleIndexes.Contains(x.i)})")))
-                    .AppendLine("]");
+                    .AppendLine(@"
+]").AppendLine();
 
-                sb.Append("Lists[")
-                    .Append(string.Join(", ",
+                sb.Append(@"Lists[
+  ")
+                    .Append(string.Join(@",
+  ",
                         _instance.Value.Lists.Select((l, i) => new { l, i })
                             .Zip(_instance.Value.ListReferenceCounts,
                             (x, c) => $"({c},{(x.l.IsEmpty ? "" : x.l.ToString())},{_instance.Value.AvailableListIndexes.Contains(x.i)})")))
-                    .AppendLine("]");
+                    .AppendLine(@"
+]").AppendLine();
 
-                sb.Append("Expressions[")
-                    .Append(string.Join(", ",
-                        _instance.Value.Expressions.Select((e, i) => new { e, i })
-                            .Zip(_instance.Value.ExpressionReferenceCounts,
-                            (x, c) => $"({c},{(x.e.IsEmpty ? "" : x.e.ToString(true))},{_instance.Value.AvailableExpressionIndexes.Contains(x.i)})")))
-                    .Append(']');
+                if (_instance.Value.Expressions.Count == 0)
+                {
+                    sb.Append("Expressions[]");
+                }
+                else
+                {
+                    sb.Append(@"Expressions[
+  ")
+                        .Append(string.Join(@",
+  ",
+                            _instance.Value.Expressions.Select((e, i) => new { e, i })
+                                .Zip(_instance.Value.ExpressionReferenceCounts, (x, c) =>
+                                $"({c},{(x.e.IsEmpty ? "" : x.e.ToString(true))},{_instance.Value.AvailableExpressionIndexes.Contains(x.i)})")))
+                    .Append(@"
+]");
+                }
 
                 return sb.ToString();
             }

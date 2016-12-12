@@ -24,6 +24,7 @@ namespace Garply
                     case ":d":
                         Console.WriteLine();
                         Console.WriteLine(Heap.Dump);
+                        Console.WriteLine();
                         Console.WriteLine(executionContext.Scope);
                         Console.WriteLine();
                         continue;

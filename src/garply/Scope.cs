@@ -75,6 +75,14 @@ namespace Garply
 
         public Scope Copy(int newSize) => new Scope(this, newSize);
 
-        public override string ToString() => $"Scope[{string.Join(", ", _variables.Select(x => x.ToString()))}]";
+        public override string ToString()
+        {
+            if (_variables.Length == 0) return "Scope[]";
+            return $@"Scope[
+  {string.Join(@",
+  ", _variables.Select(x => x.ToString()))}
+]";
+        }
+            
     }
 }
