@@ -17,6 +17,10 @@ namespace Garply.Repl
             if (completionEngine == null) throw new ArgumentNullException("completionEngine");
             _completionEngine = completionEngine;
             _tokenDelimiters = completionEngine.GetTokenDelimiters();
+
+            if (Console.ForegroundColor == (ConsoleColor)(-1)) Console.ForegroundColor = ConsoleColor.Black;
+            if (Console.BackgroundColor == (ConsoleColor)(-1)) Console.BackgroundColor = ConsoleColor.White;
+
             Console.TreatControlCAsInput = true;
         }
 
@@ -75,6 +79,7 @@ namespace Garply.Repl
                 else
                 {
                     if (keyInfo.Key == _completionEngine.Trigger.Key
+                        && keyInfo.KeyChar == _completionEngine.Trigger.KeyChar
                         && keyInfo.Modifiers == _completionEngine.Trigger.Modifiers)
                     {
                         completionIndex = 0;
