@@ -1,11 +1,13 @@
 ﻿using System;
 
-namespace Garply
+namespace Garply.Repl
 {
-    internal static class Repl
+    internal static class ReplEngine
     {
         public static void Start()
         {
+            var consoleReader = new ConsoleReader();
+
             var scopeBuilder = new Scope.Builder();
             var executionContext = new ExecutionContext(scopeBuilder.Build());
             var parser = new GarplyParser(executionContext, scopeBuilder);
@@ -16,7 +18,7 @@ namespace Garply
             {
                 Console.Write("garply> ");
                 string line;
-                switch (line = Console.ReadLine().Trim())
+                switch (line = consoleReader.ReadLine())
                 {
                     case "": continue;
                     case ":q": return;

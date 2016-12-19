@@ -1,4 +1,6 @@
-﻿namespace Garply
+﻿using Garply.Repl;
+
+namespace Garply
 {
     internal class Program
     {
@@ -6,7 +8,7 @@
         {
             if (args == null || args.Length == 0)
             {
-                Repl.Start();
+                ReplEngine.Start();
             }
             else
             {
