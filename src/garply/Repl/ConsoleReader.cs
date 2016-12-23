@@ -532,7 +532,29 @@ namespace Garply.Repl
 
         private static class Clipboard
         {
-            public static string Get()
+            private readonly static Func<string> _get;
+            private readonly static Action<string> _set;
+            
+            static Clipboard()
+            {
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    _get = WindowsGet;
+                    _set = WindowsSet;
+                }
+                else
+                {
+                    // Implement a pseudo-clipboard for OSX and Linux
+                    string clipboard = null;
+                    _get = () => clipboard;
+                    _set = value => clipboard = value;
+                }
+            }
+
+            public static string Get() => _get();
+            public static void Set(string value) => _set(value);
+
+            private static string WindowsGet()
             {
                 try
                 {
@@ -560,7 +582,7 @@ namespace Garply.Repl
                 }
             }
 
-            public static void Set(string value)
+            private static void WindowsSet(string value)
             {
                 if (!NativeMethods.OpenClipboard(IntPtr.Zero)) return;
                 IntPtr ptr = IntPtr.Zero;
