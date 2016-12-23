@@ -8,6 +8,11 @@ namespace Garply.Repl
 {
     internal class ConsoleReader
     {
+        private static readonly ConsoleColor _highlightForegroundColor =
+            Console.BackgroundColor == (ConsoleColor)(-1) ? ConsoleColor.White : Console.BackgroundColor;
+        private static readonly ConsoleColor _highlightBackgroundColor =
+            Console.ForegroundColor == (ConsoleColor)(-1) ? ConsoleColor.Black : Console.ForegroundColor;
+
         private readonly ICompletionEngine _completionEngine;
         private readonly char[] _tokenDelimiters;
 
@@ -17,9 +22,6 @@ namespace Garply.Repl
             if (completionEngine == null) throw new ArgumentNullException("completionEngine");
             _completionEngine = completionEngine;
             _tokenDelimiters = completionEngine.GetTokenDelimiters();
-
-            if (Console.ForegroundColor == (ConsoleColor)(-1)) Console.ForegroundColor = ConsoleColor.Black;
-            if (Console.BackgroundColor == (ConsoleColor)(-1)) Console.BackgroundColor = ConsoleColor.White;
 
             Console.TreatControlCAsInput = true;
         }
@@ -497,20 +499,28 @@ namespace Garply.Repl
                 End = bufferIndex;
                 var index = IsExpandingToRight(bufferIndex) ? Beginning : bufferIndex;
                 SetCursorPosition(index, _startLeft, _startTop);
-
-                // Swap the console's foreground and background colors.
-                ConsoleColor originalForegroundColor = Console.ForegroundColor;
-                Console.ForegroundColor = Console.BackgroundColor;
-                Console.BackgroundColor = originalForegroundColor;
-
-                // Write this selection's portion of the buffer using the swapped colors.
-                Console.Write(_buffer.ToString(Start, Length));
-
-                // Swap the colors back to their original colors.
-                Console.BackgroundColor = Console.ForegroundColor;
-                Console.ForegroundColor = originalForegroundColor;
-
+                using (new ColorChanger()) Console.Write(_buffer.ToString(Start, Length));
                 SetCursorPosition(bufferIndex, _startLeft, _startTop);
+            }
+
+            private class ColorChanger : IDisposable
+            {
+                private readonly ConsoleColor _foregroundColor;
+                private readonly ConsoleColor _backgroundColor;
+
+                public ColorChanger()
+                {
+                    _foregroundColor = Console.ForegroundColor;
+                    _backgroundColor = Console.BackgroundColor;
+                    Console.ForegroundColor = _highlightForegroundColor;
+                    Console.BackgroundColor = _highlightBackgroundColor;
+                }
+
+                public void Dispose()
+                {
+                    Console.ForegroundColor = _foregroundColor;
+                    Console.BackgroundColor = _backgroundColor;
+                }
             }
 
             public int Beginning { get; set; }
