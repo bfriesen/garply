@@ -21,13 +21,15 @@ namespace Garply
 
             _errorContext = errorContext;
 
-            var expressionParser = GetExpressionParser();
+            var expressionLiteralParser = GetExpressionLiteralParser();
+            var expressionParser = GetExprParser();
             var evalParser = GetEvalParser();
             var assignmentParser = GetAssignmentParser(scopeBuilder);
             var literalParser = GetLiteralExpressionParser(scopeBuilder);
 
             mainParser =
-                expressionParser.Or(
+                expressionLiteralParser.Or(
+                expressionParser).Or(
                 evalParser).Or(
                 assignmentParser).Or(
                 literalParser)
@@ -43,11 +45,11 @@ namespace Garply
                 from expression in _mainParser
                 from footer in Parse.Char(')')
                 select expression.Type == Types.error ? expression :
-                    GetEvaluateExpressionExpression(expression);
+                    GetEvalExpressionExpression(expression);
             return evalParser;
         }
 
-        private static Value GetEvaluateExpressionExpression(Value expressionValue)
+        private static Value GetEvalExpressionExpression(Value expressionValue)
         {
             Debug.Assert(expressionValue.Type == Types.expression);
             var expression = Heap.GetExpression((int)expressionValue.Raw);
@@ -58,18 +60,18 @@ namespace Garply
             return evaluateExpressionExpression;
         }
 
-        private Parser<Value> GetExpressionParser()
+        private Parser<Value> GetExprParser()
         {
             var expressionParser =
                 from header in Parse.String("expr(")
                 from expression in _mainParser
                 from footer in Parse.Char(')')
                 select expression.Type == Types.error ? expression :
-                    GetExpressionExpression(expression);
+                    GetExprExpression(expression);
             return expressionParser;
         }
 
-        private static Value GetExpressionExpression(Value expressionValue)
+        private static Value GetExprExpression(Value expressionValue)
         {
             Debug.Assert(expressionValue.Type == Types.expression);
             var expression = Heap.GetExpression((int)expressionValue.Raw);
@@ -170,10 +172,16 @@ namespace Garply
             var tupleParser = GetTupleLiteralParser();
             var listParser = GetListLiteralParser();
             var variableParser = GetVariableParser(scopeBuilder);
-            // TODO: Expression parser?
 
             var literalParser =
-                booleanParser.Or(floatParser).Or(integerParser).Or(typeParser).Or(stringParser).Or(tupleParser).Or(listParser).Or(variableParser);
+                booleanParser
+                    .Or(floatParser)
+                    .Or(integerParser)
+                    .Or(typeParser)
+                    .Or(stringParser)
+                    .Or(tupleParser)
+                    .Or(listParser)
+                    .Or(variableParser);
 
             return literalParser;
         }
@@ -355,7 +363,7 @@ namespace Garply
 
         private Parser<Value> GetListLiteralParser()
         {
-            var tupleParser =
+            var listParser =
                 from openParen in Parse.Char('[')
                 from items in _mainParser.DelimitedBy(
                     from w1 in Parse.WhiteSpace.Many()
@@ -365,14 +373,14 @@ namespace Garply
                 from closeParen in Parse.Char(']')
                 select GetCreateListExpression(items);
 
-            return tupleParser;
+            return listParser;
         }
 
         private Value GetCreateListExpression(IEnumerable<Value> itemExpressionValues)
         {
             var instructions = new List<Instruction>();
             instructions.Add(Instruction.ListEmpty());
-            using (var enumerator = itemExpressionValues.GetEnumerator()) while (enumerator.MoveNext())
+            using (var enumerator = itemExpressionValues.Reverse().GetEnumerator()) while (enumerator.MoveNext())
             {
                 var itemExpressionValue = enumerator.Current;
                 if (itemExpressionValue.Type == Types.error)
@@ -386,6 +394,69 @@ namespace Garply
                 itemExpressionValue.RemoveRef();
             }
             var expressionValue = AllocateExpression(Types.list, instructions.ToArray());
+            return expressionValue;
+        }
+
+        private Parser<Value> GetExpressionLiteralParser()
+        {
+            Parser<Value> boolParser =
+                (from t in Parse.String("true") select new Value(true)).Or(
+                from f in Parse.String("false") select new Value(false));
+
+            Parser<Value> intParser =
+                from negate in Parse.Char('-').Optional()
+                from digits in Parse.Numeric.AtLeastOnce()
+                select ParseLong(digits, negate.IsDefined);
+                
+            Parser<Value> floatParser =
+                from negate in Parse.Char('-').Optional()
+                from wholePart in Parse.Numeric.Many()
+                from dot in Parse.Char('.')
+                from fractionalPart in Parse.Numeric.AtLeastOnce()
+                select ParseFloat(wholePart, fractionalPart, negate.IsDefined);
+            
+            var typeParser =
+                from openAngle in Parse.Char('<')
+                from type in EnumParser<Types>.Create()
+                from closeAngle in Parse.Char('>')
+                select new Value(type);
+
+            var instructionParser =
+                from openBrace in Parse.Char('{')
+                from opcodeMarker in Parse.Char('@')
+                from opcode in GarplyParser.EnumParser<Opcode>.Create().Token()
+                from operand in
+                    (from comma in Parse.Char(',')
+                    from o in boolParser.Or(floatParser).Or(intParser).Or(typeParser)
+                    select o).Optional()
+                from closeBrace in Parse.Char('}')
+                select Instruction.FromOpcodeAndOperand(opcode, operand.GetOrElse(default(Value)));
+
+            var expressionParser =
+                from header in Parse.String("expr")
+                from openAngle in Parse.Char('<')
+                from type in GarplyParser.EnumParser<Types>.Create()
+                from closeAngle in Parse.Char('>')
+                from openBracket in Parse.Char('[')
+                from instructions in instructionParser.DelimitedBy(Parse.Char(',').Token())
+                from closeBracket in Parse.Char(']')
+                select GetCreateExpressionExpression(type, instructions.ToList());
+
+            return expressionParser;
+        }
+
+        private Value GetCreateExpressionExpression(Types type, IList<Instruction> sourceInstructions)
+        {
+            var instructions = new List<Instruction>();
+            foreach (var instructionPrototype in sourceInstructions.Reverse())
+            {
+                instructions.Add(Instruction.LoadOpcode(instructionPrototype.Opcode));
+                instructions.Add(Instruction.LoadInteger(instructionPrototype.Operand));
+                instructions.Add(Instruction.NewTuple(2));
+            }
+            instructions.Add(Instruction.LoadType(type));
+            instructions.Add(Instruction.NewExpression(sourceInstructions.Count));
+            var expressionValue = AllocateExpression(type, instructions.ToArray());
             return expressionValue;
         }
 
@@ -406,6 +477,23 @@ namespace Garply
             public Value Index { get; set ;}
             public string Name { get; set; }
             public bool Mutable { get; set; }
+        }
+
+        public static class EnumParser<T>
+        {
+            public static Parser<T> Create()
+            {
+                var names = Enum.GetNames(typeof(T));
+
+                var parser = Parse.String(names.First()).Return((T)Enum.Parse(typeof(T), names.First()));
+
+                foreach (var name in names.Skip(1))
+                {
+                    parser = parser.Or(Parse.String(name).Return((T)Enum.Parse(typeof(T), name)));
+                }
+
+                return parser;
+            }
         }
     }
 }

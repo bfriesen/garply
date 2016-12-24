@@ -144,9 +144,9 @@ namespace Garply
         {
             if (Operand.Type == Types.error)
             {
-                return Opcode.ToString();
+                return $"{{@{Opcode}}}";
             }
-            return $"(|{Opcode}|,{Operand.ToString()})";
+            return $"{{@{Opcode},{Operand.ToString()}}}";
         }
     }
 }

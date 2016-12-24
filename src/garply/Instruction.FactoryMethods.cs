@@ -3,6 +3,7 @@
     internal partial struct Instruction
     {
         public static Instruction FromTuple(Tuple tuple) => new Instruction((Opcode)(ushort)tuple.Items[0].Raw, tuple.Items[1]);
+        public static Instruction FromOpcodeAndOperand(Opcode opcode, Value operand) => new Instruction(opcode, operand);
         public static Instruction Nop() => new Instruction(Opcode.Nop);
         public static Instruction LoadInteger(long value) => LoadInteger(new Value(value));
         public static Instruction LoadInteger(Value intValue) => new Instruction(Opcode.LoadInteger, intValue);

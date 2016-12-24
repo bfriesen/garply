@@ -90,7 +90,7 @@ namespace Garply
                 case Types.tuple: return Heap.GetTuple((int)Raw).ToString();
                 case Types.list: return Heap.GetList((int)Raw).ToString();
                 case Types.type: return $"<{((Types)(uint)Raw).ToString()}>";
-                case Types.opcode: return $"|{((Opcode)(ushort)Raw).ToString()}|";
+                case Types.opcode: return $"@{((Opcode)(ushort)Raw).ToString()}";
                 case Types.expression: return Heap.GetExpression((int)Raw).ToString();
                 default: return $"Unknown Type: {Type}";
             }
