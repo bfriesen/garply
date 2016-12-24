@@ -243,6 +243,21 @@ namespace Garply
                             value.AddRef();
                             break;
                         }
+                    case Opcode.EvaluateExpression:
+                        {
+                            var value = context.Pop();
+                            if (value.Type != Types.expression)
+                            {
+                                context.AddError(new Error("Invalid eval target - must be an expression."));
+                                return default(Value);
+                            }
+                            var expression = Heap.GetExpression((int)value.Raw);
+                            var evaluatedValue = expression.Evaluate(context);
+                            context.Push(evaluatedValue);
+                            evaluatedValue.AddRef();
+                            value.RemoveRef();
+                            break;
+                        }
                     default:
                         throw new ArgumentOutOfRangeException("opcode");
                 }

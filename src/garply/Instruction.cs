@@ -81,6 +81,7 @@ namespace Garply
                 case Opcode.AssignVariable:
                 case Opcode.AssignMutableVariable:
                 case Opcode.ReadVariable:
+                case Opcode.EvaluateExpression:
                     throw new NotImplementedException();
                 default:
                     throw new ArgumentOutOfRangeException("opcode");

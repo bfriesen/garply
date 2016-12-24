@@ -36,5 +36,6 @@
         public static Instruction AssignVariable(Value variableIndexValue, bool mutable) => new Instruction(mutable ? Opcode.AssignMutableVariable : Opcode.AssignVariable, variableIndexValue);
         public static Instruction ReadVariable(int variableIndex) => ReadVariable(new Value(variableIndex));
         public static Instruction ReadVariable(Value variableIndexValue) => new Instruction(Opcode.ReadVariable, variableIndexValue);
+        public static Instruction EvaluateExpression() => new Instruction(Opcode.EvaluateExpression);
     }
 }

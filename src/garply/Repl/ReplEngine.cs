@@ -16,7 +16,7 @@ namespace Garply.Repl
 
             while (true)
             {
-                Console.Write("garply> ");
+                Console.Write("garply>");
                 string line;
                 switch (line = consoleReader.ReadLine())
                 {

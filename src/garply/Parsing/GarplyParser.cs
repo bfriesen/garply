@@ -22,16 +22,40 @@ namespace Garply
             _errorContext = errorContext;
 
             var expressionParser = GetExpressionParser();
+            var evalParser = GetEvalParser();
             var assignmentParser = GetAssignmentParser(scopeBuilder);
             var literalParser = GetLiteralExpressionParser(scopeBuilder);
 
             mainParser =
                 expressionParser.Or(
+                evalParser).Or(
                 assignmentParser).Or(
                 literalParser)
                     .Token();
 
             _tryParse = mainParser.TryParse;
+        }
+
+        private Parser<Value> GetEvalParser()
+        {
+            var evalParser =
+                from header in Parse.String("eval(")
+                from expression in _mainParser
+                from footer in Parse.Char(')')
+                select expression.Type == Types.error ? expression :
+                    GetEvaluateExpressionExpression(expression);
+            return evalParser;
+        }
+
+        private static Value GetEvaluateExpressionExpression(Value expressionValue)
+        {
+            Debug.Assert(expressionValue.Type == Types.expression);
+            var expression = Heap.GetExpression((int)expressionValue.Raw);
+            expressionValue.RemoveRef();
+            var instructions = new List<Instruction>(expression.Instructions);
+            instructions.Add(Instruction.EvaluateExpression());
+            var evaluateExpressionExpression = AllocateExpression(Types.Any, instructions.ToArray());
+            return evaluateExpressionExpression;
         }
 
         private Parser<Value> GetExpressionParser()
@@ -63,18 +87,20 @@ namespace Garply
             return expressionExpressionValue;
         }
 
-        private Parser<VariableDefinition> GetVariableDefinitionParser()
+        private Parser<VariableDefinition> GetVariableDefinitionParser(Scope.Builder scopeBuilder)
         {
             var variableDefinitionParser =
                 from mutableMarker in Parse.Char('$').Once().Optional()
                 from first in Parse.Letter.Once()
                 from rest in Parse.LetterOrDigit.Or(Parse.Chars('_', '-')).Many()
-                select new VariableDefinition
-                {
-                    Name = new string(
+                let name = new string(
                         mutableMarker.GetOrElse(Enumerable.Empty<char>())
                             .Concat(first)
-                            .Concat(rest).ToArray()),
+                            .Concat(rest).ToArray())
+                select new VariableDefinition
+                {
+                    Index = GetVariableIndex(name, scopeBuilder),
+                    Name = name,
                     Mutable = mutableMarker.IsDefined
                 };
             return variableDefinitionParser;
@@ -83,7 +109,7 @@ namespace Garply
         private Parser<Value> GetAssignmentParser(Scope.Builder scopeBuilder)
         {
             var assignmentParser =
-                from variableDefinition in GetVariableDefinitionParser()
+                from variableDefinition in GetVariableDefinitionParser(scopeBuilder)
                 from assignmentOperator in Parse.Char('=').Token()
                 from value in _mainParser
                 select GetAssignmentExpression(scopeBuilder, variableDefinition.Name, value, variableDefinition.Mutable);
@@ -104,12 +130,11 @@ namespace Garply
         private Parser<Value> GetVariableParser(Scope.Builder scopeBuilder)
         {
             var variableParser =
-                from variableDefinition in GetVariableDefinitionParser()
-                let variableIndex = GetVariableIndex(variableDefinition.Name, scopeBuilder)
-                select variableIndex.Type == Types.error ? default(Value) :
+                from variableDefinition in GetVariableDefinitionParser(scopeBuilder)
+                select variableDefinition.Index.Type == Types.error ? default(Value) :
                     AllocateExpression(Types.Any, new[]
                     {
-                        Instruction.ReadVariable(variableIndex)
+                        Instruction.ReadVariable(variableDefinition.Index)
                     });
             return variableParser;
         }
@@ -378,6 +403,7 @@ namespace Garply
 
         private class VariableDefinition
         {
+            public Value Index { get; set ;}
             public string Name { get; set; }
             public bool Mutable { get; set; }
         }
