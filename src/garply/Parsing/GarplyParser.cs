@@ -420,6 +420,11 @@ namespace Garply
                 from type in EnumParser<Types>.Create()
                 from closeAngle in Parse.Char('>')
                 select new Value(type);
+            
+            var opcodeParser =
+                from opcodeMarker in Parse.Char('@')
+                from opcode in EnumParser<Opcode>.Create()
+                select new Value(opcode);
 
             var instructionParser =
                 from openBrace in Parse.Char('{')
@@ -427,7 +432,7 @@ namespace Garply
                 from opcode in GarplyParser.EnumParser<Opcode>.Create().Token()
                 from operand in
                     (from comma in Parse.Char(',')
-                    from o in boolParser.Or(floatParser).Or(intParser).Or(typeParser)
+                    from o in boolParser.Or(floatParser).Or(intParser).Or(typeParser).Or(opcodeParser)
                     select o).Optional()
                 from closeBrace in Parse.Char('}')
                 select Instruction.FromOpcodeAndOperand(opcode, operand.GetOrElse(default(Value)));
