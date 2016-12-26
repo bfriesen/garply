@@ -15,6 +15,8 @@ namespace Garply.Repl
 
         private readonly ICompletionEngine _completionEngine;
         private readonly char[] _tokenDelimiters;
+        private readonly List<string> _history = new List<string>();
+        private int _historyIndex;
 
         public ConsoleReader() : this(new EmptyCompletionEngine()) { }
         public ConsoleReader(ICompletionEngine completionEngine)
@@ -31,6 +33,7 @@ namespace Garply.Repl
             var startLeft = Console.CursorLeft;
             var startTop = Console.CursorTop;
             var buffer = new StringBuilder();
+            var current = "";
 
             var selection = new Selection(buffer, startLeft, startTop);
 
@@ -206,9 +209,62 @@ namespace Garply.Repl
                                     selection.Resize(bufferIndex);
                                 else selection.Reset(bufferIndex);
                                 break;
+                            case ConsoleKey.UpArrow:
+                                if (_historyIndex > 0)
+                                {
+                                    Console.SetCursorPosition(startLeft, startTop);
+                                    Console.Write(new string(' ', buffer.Length));
+                                    
+                                    if (_historyIndex == _history.Count)
+                                    {
+                                        // We're going back in history. Cache whatever is in the buffer before changing anything.
+                                        current = buffer.ToString();
+                                    }
+
+                                    _historyIndex--;
+                                    buffer.Clear();
+                                    buffer.Append(_history[_historyIndex]);
+                                    bufferIndex = buffer.Length;
+
+                                    Console.SetCursorPosition(startLeft, startTop);
+                                    Console.Write(buffer.ToString());
+                                    selection.Reset(bufferIndex);
+                                    SetCursorPosition(bufferIndex, startLeft, startTop);
+                                }
+                                break;
+                            case ConsoleKey.DownArrow:
+                                if (_historyIndex < _history.Count)
+                                {
+                                    Console.SetCursorPosition(startLeft, startTop);
+                                    Console.Write(new string(' ', buffer.Length));
+                                    
+                                    _historyIndex++;
+                                    buffer.Clear();
+                                    
+                                    if (_historyIndex == _history.Count)
+                                    {
+                                        buffer.Append(current);
+                                    }
+                                    else
+                                    {
+                                        buffer.Append(_history[_historyIndex]);
+                                    }
+
+                                    bufferIndex = buffer.Length;
+
+                                    Console.SetCursorPosition(startLeft, startTop);
+                                    Console.Write(buffer.ToString());
+                                    selection.Reset(bufferIndex);
+                                    SetCursorPosition(bufferIndex, startLeft, startTop);
+                                }
+                                break;
                             case ConsoleKey.Enter:
                                 Console.WriteLine();
-                                return buffer.ToString();
+                                var value = buffer.ToString();
+                                _history.Add(value);
+                                _historyIndex++;
+                                current = "";
+                                return value;
                             default:
                                 if (char.IsControl(keyInfo.KeyChar))
                                 {
