@@ -595,90 +595,110 @@ namespace Garply.Repl
             {
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 {
-                    _get = WindowsGet;
-                    _set = WindowsSet;
+                    _get = Windows.Get;
+                    _set = Windows.Set;
                 }
-                else
+                else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
                 {
-                    // Implement a pseudo-clipboard for OSX and Linux
-                    string clipboard = null;
-                    _get = () => clipboard;
-                    _set = value => clipboard = value;
+                    _get = OSX.Get;
+                    _set = OSX.Set;
+                }
+                else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                {
+                    _get = Linux.Get;
+                    _set = Linux.Set;
                 }
             }
 
             public static string Get() => _get();
             public static void Set(string value) => _set(value);
 
-            private static string WindowsGet()
+            private static class OSX
             {
-                try
+                private static string _clipboard = null;
+                public static string Get() => _clipboard;
+                public static void Set(string value) => _clipboard = value;
+            }
+
+            private static class Linux
+            {
+                private static string _clipboard = null;
+                public static string Get() => _clipboard;
+                public static void Set(string value) => _clipboard = value;
+            }
+
+            private static class Windows
+            {
+                public static string Get()
                 {
-                    if (!NativeMethods.OpenClipboard(IntPtr.Zero)) return null;
-                    var clipboardPtr = NativeMethods.GetClipboardData(13);
-                    if (clipboardPtr == IntPtr.Zero) return null;
-                    IntPtr lockPtr = IntPtr.Zero;
                     try
                     {
-                        lockPtr = NativeMethods.GlobalLock(clipboardPtr);
-                        if (lockPtr == IntPtr.Zero) return null;
-                        var size = NativeMethods.GlobalSize(clipboardPtr);
-                        var buffer = new byte[size];
-                        Marshal.Copy(lockPtr, buffer, 0, size);
-                        return Encoding.Unicode.GetString(buffer).TrimEnd('\0');
+                        if (!NativeMethods.OpenClipboard(IntPtr.Zero)) return null;
+                        var clipboardPtr = NativeMethods.GetClipboardData(13);
+                        if (clipboardPtr == IntPtr.Zero) return null;
+                        IntPtr lockPtr = IntPtr.Zero;
+                        try
+                        {
+                            lockPtr = NativeMethods.GlobalLock(clipboardPtr);
+                            if (lockPtr == IntPtr.Zero) return null;
+                            var size = NativeMethods.GlobalSize(clipboardPtr);
+                            var buffer = new byte[size];
+                            Marshal.Copy(lockPtr, buffer, 0, size);
+                            return Encoding.Unicode.GetString(buffer).TrimEnd('\0');
+                        }
+                        finally
+                        {
+                            if (lockPtr != IntPtr.Zero) NativeMethods.GlobalUnlock(clipboardPtr);
+                        }
                     }
                     finally
                     {
-                        if (lockPtr != IntPtr.Zero) NativeMethods.GlobalUnlock(clipboardPtr);
+                        NativeMethods.CloseClipboard();
                     }
                 }
-                finally
+
+                public static void Set(string value)
                 {
-                    NativeMethods.CloseClipboard();
+                    if (!NativeMethods.OpenClipboard(IntPtr.Zero)) return;
+                    IntPtr ptr = IntPtr.Zero;
+                    try
+                    {
+                        if (!NativeMethods.EmptyClipboard()) return;
+                        ptr = Marshal.StringToHGlobalUni(value);
+                        if (!NativeMethods.SetClipboardData(13, ptr)) return;
+                    }
+                    finally
+                    {
+                        NativeMethods.CloseClipboard();
+                    }
                 }
-            }
 
-            private static void WindowsSet(string value)
-            {
-                if (!NativeMethods.OpenClipboard(IntPtr.Zero)) return;
-                IntPtr ptr = IntPtr.Zero;
-                try
+                private static class NativeMethods
                 {
-                    if (!NativeMethods.EmptyClipboard()) return;
-                    ptr = Marshal.StringToHGlobalUni(value);
-                    if (!NativeMethods.SetClipboardData(13, ptr)) return;
+                    [DllImport("user32.dll")]
+                    public static extern bool OpenClipboard(IntPtr hWndNewOwner);
+
+                    [DllImport("user32.dll")]
+                    public static extern bool CloseClipboard();
+
+                    [DllImport("user32.dll")]
+                    public static extern bool EmptyClipboard();
+
+                    [DllImport("user32.dll")]
+                    public static extern bool SetClipboardData(uint uFormat, IntPtr data);
+
+                    [DllImport("user32.dll")]
+                    public static extern IntPtr GetClipboardData(uint uFormat);
+
+                    [DllImport("kernel32.dll")]
+                    public static extern int GlobalSize(IntPtr hMem);
+
+                    [DllImport("kernel32.dll")]
+                    public static extern IntPtr GlobalLock(IntPtr hMem);
+
+                    [DllImport("kernel32.dll")]
+                    public static extern bool GlobalUnlock(IntPtr hMem);
                 }
-                finally
-                {
-                    NativeMethods.CloseClipboard();
-                }
-            }
-
-            private static class NativeMethods
-            {
-                [DllImport("user32.dll")]
-                public static extern bool OpenClipboard(IntPtr hWndNewOwner);
-
-                [DllImport("user32.dll")]
-                public static extern bool CloseClipboard();
-
-                [DllImport("user32.dll")]
-                public static extern bool EmptyClipboard();
-
-                [DllImport("user32.dll")]
-                public static extern bool SetClipboardData(uint uFormat, IntPtr data);
-
-                [DllImport("user32.dll")]
-                public static extern IntPtr GetClipboardData(uint uFormat);
-
-                [DllImport("kernel32.dll")]
-                public static extern int GlobalSize(IntPtr hMem);
-
-                [DllImport("kernel32.dll")]
-                public static extern IntPtr GlobalLock(IntPtr hMem);
-
-                [DllImport("kernel32.dll")]
-                public static extern bool GlobalUnlock(IntPtr hMem);
             }
         }
 
