@@ -24,8 +24,8 @@ namespace Garply
             var expressionLiteralParser = GetExpressionLiteralParser();
             var expressionParser = GetExprParser();
             var evalParser = GetEvalParser();
-            var assignmentParser = GetAssignmentParser(scopeBuilder);
-            var literalParser = GetLiteralExpressionParser(scopeBuilder);
+            var assignmentParser = GetAssignmentParser(scopeBuilder, errorContext);
+            var literalParser = GetLiteralExpressionParser(scopeBuilder, errorContext);
 
             mainParser =
                 expressionLiteralParser.Or(
@@ -36,6 +36,27 @@ namespace Garply
                     .Token();
 
             _tryParse = mainParser.TryParse;
+        }
+
+        public Value ParseLine(string line)
+        {
+            var result = _tryParse(line);
+
+            if (result.WasSuccessful)
+            {
+                if (!result.Remainder.AtEnd)
+                {
+                    _errorContext.AddError(new Error($"Parse error: unexpected '{result.Remainder.Source.Substring(result.Remainder.Position)}' starting at index {result.Remainder.Position}."));
+                    return default(Value);
+                }
+
+                return result.Value;
+            }
+            else
+            {
+                _errorContext.AddError(new Error($"Parse error: {result.Message}."));
+                return default(Value);
+            }
         }
 
         private Parser<Value> GetEvalParser()
@@ -89,7 +110,7 @@ namespace Garply
             return expressionExpressionValue;
         }
 
-        private Parser<VariableDefinition> GetVariableDefinitionParser(Scope.Builder scopeBuilder)
+        private Parser<VariableDefinition> GetVariableDefinitionParser(Scope.Builder scopeBuilder, ErrorContext errorContext)
         {
             var variableDefinitionParser =
                 from mutableMarker in Parse.Char('$').Once().Optional()
@@ -101,17 +122,17 @@ namespace Garply
                             .Concat(rest).ToArray())
                 select new VariableDefinition
                 {
-                    Index = GetVariableIndex(name, scopeBuilder),
+                    Index = GetVariableIndex(name, scopeBuilder, errorContext),
                     Name = name,
                     Mutable = mutableMarker.IsDefined
                 };
             return variableDefinitionParser;
         }
 
-        private Parser<Value> GetAssignmentParser(Scope.Builder scopeBuilder)
+        private Parser<Value> GetAssignmentParser(Scope.Builder scopeBuilder, ErrorContext errorContext)
         {
             var assignmentParser =
-                from variableDefinition in GetVariableDefinitionParser(scopeBuilder)
+                from variableDefinition in GetVariableDefinitionParser(scopeBuilder, errorContext)
                 from assignmentOperator in Parse.Char('=').Token()
                 from value in _mainParser
                 select GetAssignmentExpression(scopeBuilder, variableDefinition.Name, value, variableDefinition.Mutable);
@@ -129,10 +150,10 @@ namespace Garply
             return AllocateExpression(expression.Type, instructions.ToArray());
         }
 
-        private Parser<Value> GetVariableParser(Scope.Builder scopeBuilder)
+        private Parser<Value> GetVariableParser(Scope.Builder scopeBuilder, ErrorContext errorContext)
         {
             var variableParser =
-                from variableDefinition in GetVariableDefinitionParser(scopeBuilder)
+                from variableDefinition in GetVariableDefinitionParser(scopeBuilder, errorContext)
                 select variableDefinition.Index.Type == Types.error ? default(Value) :
                     AllocateExpression(Types.Any, new[]
                     {
@@ -141,28 +162,7 @@ namespace Garply
             return variableParser;
         }
 
-        public Value ParseLine(string line)
-        {
-            var result = _tryParse(line);
-
-            if (result.WasSuccessful)
-            {
-                if (!result.Remainder.AtEnd)
-                {
-                    _errorContext.AddError(new Error("Partial line match - the whole line must be parsable as a single expression."));
-                    return default(Value);
-                }
-
-                return result.Value;
-            }
-            else
-            {
-                _errorContext.AddError(new Error($"Parse error: {result.Message}."));
-                return default(Value);
-            }
-        }
-
-        private Parser<Value> GetLiteralExpressionParser(Scope.Builder scopeBuilder)
+        private Parser<Value> GetLiteralExpressionParser(Scope.Builder scopeBuilder, ErrorContext errorContext)
         {
             var booleanParser = GetBooleanLiteralParser();
             var integerParser = GetIntegerLiteralParser();
@@ -171,7 +171,7 @@ namespace Garply
             var stringParser = GetStringLiteralParser();
             var tupleParser = GetTupleLiteralParser();
             var listParser = GetListLiteralParser();
-            var variableParser = GetVariableParser(scopeBuilder);
+            var variableParser = GetVariableParser(scopeBuilder, errorContext);
 
             var literalParser =
                 booleanParser
@@ -186,12 +186,16 @@ namespace Garply
             return literalParser;
         }
 
-        private Value GetVariableIndex(string variableName, Scope.Builder scopeBuilder)
+        private Value GetVariableIndex(string variableName, Scope.Builder scopeBuilder, ErrorContext errorContext)
         {
             int index;
             if (!scopeBuilder.TryGetIndex(variableName, out index))
             {
-                // TODO: error context?
+                var message = $"Unknown variable: '{variableName}'.";
+                if (errorContext.IsEmpty || errorContext.Peek().Message != message)
+                {
+                    errorContext.AddError(new Error(message));
+                }
                 return default(Value);
             }
             return new Value(index);

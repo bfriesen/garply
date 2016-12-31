@@ -35,15 +35,15 @@ namespace Garply
             return _variables[index].Value;
         }
 
-        public Value SetValue(ErrorContext errorContext, int index, Value value, bool isMutable)
+        public Value    SetValue(ErrorContext errorContext, int index, Value value, bool allowMutability)
         {
             if (_variables[index].Value.Type == Types.error) // the variable has never been set
             {
-                _variables[index] = new Variable(value, isMutable);
+                _variables[index] = new Variable(value, allowMutability);
                 value.AddRef();
                 return value;
             }
-            if (_variables[index].IsMutable)
+            if (allowMutability && _variables[index].IsMutable)
             {
                 _variables[index].Value.RemoveRef();
                 _variables[index] = new Variable(value, _variables[index].IsMutable);

@@ -6,6 +6,8 @@ namespace Garply
     {
         private readonly Queue<Error> _errors = new Queue<Error>();
         public void AddError(Error error) => _errors.Enqueue(error);
+        public Error Peek() => _errors.Peek();
+        public bool IsEmpty => _errors.Count == 0;
 
         public Value TakeErrors()
         {
